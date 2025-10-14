@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -14,7 +14,7 @@ model Candidate {
   firstName       String    @default("")
   lastName        String    @default("")
   phone           String    @default("")
-  age             Int       @default(18)
+  age             Int?      @default(18)
   candidateCountry String   @default("Україна")
   vacancyCountry  String    @default("Польща")
   projectName     String    @default("")
@@ -31,6 +31,17 @@ model Candidate {
   deletedBy       Int?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+  
+  // Нові поля
+  applicationNumber String? @unique
+  email            String?
+  passportNumber   String?
+  passportExpiry   DateTime?
+  education        String?
+  workExperience   String?
+  languageSkills   String?
+  familyStatus     String?
+  children         Int?
   
   payments        Payment[]
   applications    Application[]
@@ -75,6 +86,8 @@ model User {
   isActive  Boolean  @default(true)
   branch    String?  
   salary    Float    @default(0)
+  email     String?
+  phone     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
