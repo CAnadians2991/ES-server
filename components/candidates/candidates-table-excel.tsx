@@ -79,7 +79,7 @@ export function CandidatesTableExcel({ candidates: initialCandidates, onAddNewRo
         })
       }
     }, 500), // Зменшуємо до 500ms для кращого відчуття
-    [toast]
+    [toast, api.candidates.update]
   )
 
   useEffect(() => {
@@ -201,7 +201,7 @@ const renderCell = (candidate: Candidate, field: string, editingCell: { id: numb
       initialWidths[col.key] = col.width
     })
     setColumnWidths(initialWidths)
-  }, [])
+  }, [columns])
 
   useEffect(() => {
     if (editingCell && inputRef.current) {
@@ -387,7 +387,7 @@ const renderCell = (candidate: Candidate, field: string, editingCell: { id: numb
         })
       }
     }, 1000), // Зменшуємо до 1 секунди для кращого відчуття
-    [toast]
+    [toast, api.candidates.reorder]
   )
 
   const handleDrop = useCallback((targetId: number) => {
@@ -433,7 +433,7 @@ const renderCell = (candidate: Candidate, field: string, editingCell: { id: numb
     setHistoryModalOpen(true)
   }
 
-  function handleCopyRow(candidate: Candidate) {
+  const handleCopyRow = useCallback((candidate: Candidate) => {
     const rowData = [
       formatCandidateId(candidate.id),
       candidate.branch,
@@ -459,7 +459,7 @@ const renderCell = (candidate: Candidate, field: string, editingCell: { id: numb
       title: 'Скопійовано',
       description: 'Рядок скопійовано в буфер обміну',
     })
-  }
+  }, [toast])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -473,7 +473,7 @@ const renderCell = (candidate: Candidate, field: string, editingCell: { id: numb
 
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [selectedRow, candidates, editingCell])
+  }, [selectedRow, candidates, editingCell, handleCopyRow])
 
 
   function getStatusClass(status: string) {

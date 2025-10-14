@@ -35,9 +35,9 @@ export function CandidateHistoryModal({ candidateId, isOpen, onClose }: Candidat
     if (isOpen && candidateId) {
       loadHistory()
     }
-  }, [isOpen, candidateId])
+  }, [isOpen, candidateId, loadHistory])
 
-  async function loadHistory() {
+  const loadHistory = useCallback(async () => {
     if (!candidateId) return
     
     setIsLoading(true)
@@ -55,7 +55,7 @@ export function CandidateHistoryModal({ candidateId, isOpen, onClose }: Candidat
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [candidateId, toast])
 
   async function handleRevert(logId: number) {
     if (!isAdmin) {

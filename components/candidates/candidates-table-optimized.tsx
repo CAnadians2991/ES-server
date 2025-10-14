@@ -259,7 +259,7 @@ export function CandidatesTableExcel({ candidates: initialCandidates, onAddNewRo
         })
       }
     }, DEBOUNCE_DELAY),
-    [toast]
+    [toast, api.candidates.update]
   )
 
   // Оптимізовані обробники подій

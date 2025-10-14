@@ -158,6 +158,3 @@ export async function POST(request: NextRequest) {
 function clearCache() {
   cache.clear()
 }
-
-// Експортуємо функцію для використання в інших місцях
-export { clearCache }
