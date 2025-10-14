@@ -40,6 +40,7 @@ export function CandidatesTableExcel({ candidates: initialCandidates, onAddNewRo
   const [candidates, setCandidates] = useState(initialCandidates)
   const [editingCell, setEditingCell] = useState<{ id: number; field: string } | null>(null)
   const [editValue, setEditValue] = useState<string>('')
+  const [originalValue, setOriginalValue] = useState<any>(null) // Додаємо для збереження оригінального значення
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({})
   const [resizingColumn, setResizingColumn] = useState<string | null>(null)
   const [draggedRow, setDraggedRow] = useState<number | null>(null)
@@ -54,9 +55,12 @@ export function CandidatesTableExcel({ candidates: initialCandidates, onAddNewRo
   const canDelete = hasPermission('candidates', 'delete')
   const isAdmin = user?.role === 'ADMIN'
 
+  console.log('Permissions:', { canWrite, canDelete, isAdmin, userRole: user?.role })
+
   // Debounced update function - оптимізовано для слабких комп'ютерів
   const debouncedUpdate = useCallback(
     debounce(async (candidateId: number, field: string, newValue: any) => {
+      console.log('debouncedUpdate called:', { candidateId, field, newValue })
       try {
         const updateData: any = { [field]: newValue }
         
@@ -64,8 +68,10 @@ export function CandidatesTableExcel({ candidates: initialCandidates, onAddNewRo
           updateData[field] = newValue instanceof Date ? newValue.toISOString() : newValue
         }
         
+        console.log('Sending API request:', { candidateId, updateData })
         await api.candidates.update(candidateId, updateData)
         
+        console.log('API request successful')
         toast({
           title: 'Успішно',
           description: 'Кандидата оновлено',
@@ -216,18 +222,36 @@ const renderCell = (candidate: Candidate, field: string, editingCell: { id: numb
 
 
   function handleCellClick(candidate: Candidate, field: keyof Candidate) {
-    if (!canWrite) return
+    console.log('handleCellClick:', { canWrite, field, candidateId: candidate.id })
+    if (!canWrite) {
+      console.log('Cannot write - no permission')
+      return
+    }
     const col = columns.find(c => c.key === field)
-    if (!col?.editable) return
+    if (!col?.editable) {
+      console.log('Field not editable:', field)
+      return
+    }
 
+    console.log('Starting edit for:', { id: candidate.id, field })
     setEditingCell({ id: candidate.id, field })
     setEditValue(String(candidate[field] || ''))
+    setOriginalValue(candidate[field]) // Зберігаємо оригінальне значення
   }
 
   const handleCellBlur = useCallback(async (candidate: Candidate, field: keyof Candidate) => {
+    console.log('handleCellBlur:', { editingCell, field, candidateId: candidate.id })
     if (!editingCell) return
 
-    const oldValue = candidate[field]
+    // Використовуємо збережене оригінальне значення замість пошуку в масиві
+    const oldValue = originalValue
+    
+    console.log('Original vs current candidate:', { 
+      original: originalValue, 
+      current: candidate[field as keyof Candidate],
+      editValue: editValue,
+      field 
+    })
     let newValue: any = editValue
 
     // Обробка порожніх рядків
@@ -246,21 +270,34 @@ const renderCell = (candidate: Candidate, field: string, editingCell: { id: numb
       newValue = editValue ? new Date(editValue) : null
     }
 
-    if (String(oldValue) === String(newValue)) {
+    console.log('After processing newValue:', { editValue, newValue, field })
+    console.log('Values comparison:', { oldValue, newValue, field, oldType: typeof oldValue, newType: typeof newValue })
+    
+    // Покращена логіка порівняння
+    const oldStr = oldValue === null || oldValue === undefined ? '' : String(oldValue)
+    const newStr = newValue === null || newValue === undefined ? '' : String(newValue)
+    
+    if (oldStr === newStr) {
+      console.log('Values are the same, skipping update:', { oldStr, newStr })
       setEditingCell(null)
       return
     }
+    
+    console.log('Values are different, proceeding with update:', { oldStr, newStr })
 
+    console.log('Updating candidate:', { id: candidate.id, field, newValue })
     // Миттєве оновлення UI
     updateCandidate(candidate.id, { [field]: newValue })
     setEditingCell(null)
 
     // Debounced API call
+    console.log('Calling debouncedUpdate')
     debouncedUpdate(candidate.id, field, newValue)
-  }, [editingCell, editValue, updateCandidate, debouncedUpdate])
+  }, [editingCell, editValue, updateCandidate, debouncedUpdate, originalValue])
 
   // Миттєве оновлення при введенні тексту - виправлено
   const handleInputChange = useCallback((value: string) => {
+    console.log('handleInputChange called:', { value, currentEditValue: editValue })
     setEditValue(value)
     
     // Миттєве оновлення UI для всіх полів
@@ -276,11 +313,12 @@ const renderCell = (candidate: Candidate, field: string, editingCell: { id: numb
           newValue = isNaN(parsed) ? null : parsed
         }
         
+        console.log('Updating UI immediately:', { candidateId: candidate.id, field, newValue })
         // Миттєве оновлення UI для всіх полів
         updateCandidate(candidate.id, { [field]: newValue })
       }
     }
-  }, [editingCell, candidates, updateCandidate])
+  }, [editingCell, candidates, updateCandidate, editValue])
 
   function handleKeyDown(e: React.KeyboardEvent, candidate: Candidate, field: string) {
     if (e.key === 'Enter') {
