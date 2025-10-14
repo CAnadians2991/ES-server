@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { api } from '@/lib/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -19,11 +19,7 @@ export default function ExpensesPage() {
   const [selectedMonth, setSelectedMonth] = useState(String(new Date().getMonth() + 1).padStart(2, '0'))
   const [selectedYear, setSelectedYear] = useState(String(new Date().getFullYear()))
 
-  useEffect(() => {
-    loadExpenses()
-  }, [selectedMonth, selectedYear])
-
-  async function loadExpenses() {
+  const loadExpenses = useCallback(async () => {
     setIsLoading(true)
     try {
       const filters: Record<string, string> = {
@@ -46,7 +42,12 @@ export default function ExpensesPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [selectedMonth, selectedYear, user?.branch, user?.role, toast])
+
+  useEffect(() => {
+    loadExpenses()
+  }, [loadExpenses])
+
 
   const totalExpenses = expenses.reduce((sum, e) => sum + e.rent + e.utilities + e.office + e.advertising + e.other, 0)
 

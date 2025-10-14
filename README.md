@@ -138,6 +138,31 @@ npm run db:seed-full
 - [ ] Мобільна версія
 - [ ] API для інтеграцій
 
+## 🚀 Деплой на Vercel
+
+### 1. Підключіть GitHub репозиторій до Vercel
+
+### 2. Налаштуйте Environment Variables в Vercel Dashboard:
+```
+DATABASE_URL=postgresql://neondb_owner:npg_xB8CVkSlu9GW@ep-old-sea-ag9q434h-pooler.c-2.eu-central-1.aws.neon.tech/neondb?sslmode=require
+JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+NEXTAUTH_URL=https://your-app.vercel.app
+NEXTAUTH_SECRET=your-nextauth-secret-change-this
+NODE_ENV=production
+```
+
+### 3. Після деплою запустіть seed бази даних:
+```bash
+npx prisma db push
+npx tsx prisma/seed-postgresql.ts
+```
+
+### 4. Логін для тестування:
+- **Логін**: admin
+- **Пароль**: 123456
+
+---
+
 ## 🤝 Внесок
 
 1. Fork репозиторій

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { ProtectedRoute } from '@/components/auth/protected-route'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -23,11 +23,7 @@ export default function DeletedRecordsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const { toast } = useToast()
 
-  useEffect(() => {
-    loadDeletedRecords()
-  }, [])
-
-  async function loadDeletedRecords() {
+  const loadDeletedRecords = useCallback(async () => {
     setIsLoading(true)
     try {
       const response = await fetch('/api/candidates/deleted')
@@ -43,7 +39,12 @@ export default function DeletedRecordsPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [toast])
+
+  useEffect(() => {
+    loadDeletedRecords()
+  }, [loadDeletedRecords])
+
 
   async function handleRestore(candidateId: number) {
     try {
