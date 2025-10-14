@@ -52,7 +52,8 @@ const TableRow = memo(({
   handleDragOver, 
   handleDrop, 
   handleDelete, 
-  handleShowHistory, 
+  handleShowHistory,
+  handleRowClick, 
   canWrite, 
   canDelete, 
   isAdmin, 
@@ -61,6 +62,7 @@ const TableRow = memo(({
   selectedRow 
 }: any) => {
   const rowRef = useRef<HTMLTableRowElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   return (
     <tr
@@ -143,8 +145,8 @@ const TableRow = memo(({
 
 TableRow.displayName = 'TableRow'
 
-// Мемоізована функція рендерингу клітинки
-const renderCell = memo((candidate: Candidate, field: string) => {
+// Функція рендерингу клітинки
+const renderCell = (candidate: Candidate, field: string): string => {
   const value = candidate[field as keyof Candidate]
   
   if (field === 'arrivalDate' || field === 'passportExpiry') {
@@ -152,13 +154,11 @@ const renderCell = memo((candidate: Candidate, field: string) => {
   }
   
   if (field === 'age' || field === 'paymentAmount' || field === 'children') {
-    return value || '-'
+    return String(value || '-')
   }
   
   return String(value || '-')
-})
-
-renderCell.displayName = 'RenderCell'
+}
 
 // Virtual scrolling hook
 const useVirtualScrolling = (items: any[], containerHeight: number) => {

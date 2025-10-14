@@ -31,12 +31,6 @@ export function CandidateHistoryModal({ candidateId, isOpen, onClose }: Candidat
   
   const isAdmin = user?.role === 'ADMIN'
 
-  useEffect(() => {
-    if (isOpen && candidateId) {
-      loadHistory()
-    }
-  }, [isOpen, candidateId, loadHistory])
-
   const loadHistory = useCallback(async () => {
     if (!candidateId) return
     
@@ -56,6 +50,12 @@ export function CandidateHistoryModal({ candidateId, isOpen, onClose }: Candidat
       setIsLoading(false)
     }
   }, [candidateId, toast])
+
+  useEffect(() => {
+    if (isOpen && candidateId) {
+      loadHistory()
+    }
+  }, [isOpen, candidateId, loadHistory])
 
   async function handleRevert(logId: number) {
     if (!isAdmin) {

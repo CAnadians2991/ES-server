@@ -1,5 +1,14 @@
 import { create } from 'zustand'
-import type { Candidate, CandidateFilters } from '@/types'
+import type { Candidate } from '@/types'
+
+interface CandidateFilters {
+  branch?: string
+  vacancyCountry?: string
+  candidateStatus?: string
+  responsible?: string
+  month?: string
+  year?: string
+}
 
 interface CandidatesStore {
   candidates: Candidate[]

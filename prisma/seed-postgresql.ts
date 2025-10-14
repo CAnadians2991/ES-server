@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole } from '@prisma/client'
+import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
@@ -167,33 +167,48 @@ async function main() {
 
   // Створюємо тестові витрати
   const expenses = await Promise.all([
-    prisma.expense.create({
+    prisma.branchExpense.create({
       data: {
-        description: 'Офісна оренда',
-        amount: 5000,
-        category: 'Оренда',
-        date: new Date('2024-01-01'),
+        branch: 'ЦО',
+        month: 1,
+        year: 2024,
+        rent: 15000,
+        utilities: 2000,
+        office: 3000,
+        advertising: 5000,
+        other: 1000,
+        description: 'Витрати за січень 2024',
       },
     }),
-    prisma.expense.create({
+    prisma.branchExpense.create({
       data: {
-        description: 'Комунікації',
-        amount: 800,
-        category: 'Комунікації',
-        date: new Date('2024-01-01'),
+        branch: 'Рівне',
+        month: 1,
+        year: 2024,
+        rent: 8000,
+        utilities: 1500,
+        office: 2000,
+        advertising: 3000,
+        other: 500,
+        description: 'Витрати за січень 2024',
       },
     }),
-    prisma.expense.create({
+    prisma.branchExpense.create({
       data: {
-        description: 'Маркетинг',
-        amount: 2000,
-        category: 'Маркетинг',
-        date: new Date('2024-01-01'),
+        branch: 'Київ',
+        month: 1,
+        year: 2024,
+        rent: 12000,
+        utilities: 1800,
+        office: 2500,
+        advertising: 4000,
+        other: 700,
+        description: 'Витрати за січень 2024',
       },
     }),
   ])
 
-  console.log('✅ Expenses created:', expenses.length)
+  console.log('✅ Branch expenses created:', expenses.length)
 
   // Створюємо тестові зарплати
   const salaries = await Promise.all([
@@ -202,7 +217,12 @@ async function main() {
         userId: admin.id,
         month: 1,
         year: 2024,
-        amount: 15000,
+        baseSalary: 15000,
+        bonus: 3000,
+        visaBonus: 1000,
+        freeBonus: 500,
+        total: 19500,
+        indicators: 10,
       },
     }),
   ])

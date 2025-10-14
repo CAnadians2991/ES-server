@@ -41,7 +41,7 @@ export function CandidatesFilters({ onAddCandidate }: CandidatesFiltersProps) {
   const { hasPermission } = useAuth()
 
   const updateFilter = useCallback((key: string, value: string) => {
-    const newFilters = { ...filters }
+    const newFilters: any = { ...filters }
     
     if (value === 'all') {
       // Видаляємо фільтр якщо вибрано "all"

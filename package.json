@@ -4,17 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev:next": "next dev",
-    "dev:custom": "node server.js",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
-    "start:custom": "node server.js",
     "lint": "next lint",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
-    "db:seed": "tsx prisma/seed.ts",
-    "db:seed-full": "tsx prisma/seed-full.ts",
-    "db:seed-pg": "tsx prisma/seed-postgresql.ts",
+    "db:seed": "tsx prisma/seed-postgresql.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {
@@ -43,8 +38,6 @@
     "react-hook-form": "^7.51.0",
     "react-window": "^2.2.0",
     "react-window-infinite-loader": "^2.0.0",
-    "socket.io": "^4.8.1",
-    "socket.io-client": "^4.8.1",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.23.0",
