@@ -112,8 +112,8 @@ export async function POST(request: NextRequest) {
       data: {
         title,
         description,
-        managerId: user.id,
-        managerName: user.fullName,
+        managerId: user.userId,
+        managerName: user.fullName || user.username,
         branch: user.branch || 'ЦО',
         vacancyCountry,
         projectName,
@@ -122,7 +122,6 @@ export async function POST(request: NextRequest) {
         workAddress,
         arrivalDate: arrivalDate ? new Date(arrivalDate) : null,
         transportType,
-        contacts,
         totalAmount: totalAmount || 0,
         dealCurrency: dealCurrency || 'грн',
         dealStage: 'Створена',
@@ -149,7 +148,7 @@ export async function POST(request: NextRequest) {
         type: 'deal_created',
         title: 'Створено угоду',
         description: `Створено угоду "${title}" з ${contactIds.length} контактами`,
-        userId: user.id,
+        userId: user.userId,
         userName: user.fullName
       }
     })
@@ -158,7 +157,7 @@ export async function POST(request: NextRequest) {
     const createdDeal = await prisma.deal.findUnique({
       where: { id: deal.id },
       include: {
-        contacts: {
+        dealContacts: {
           include: {
             contact: true
           }

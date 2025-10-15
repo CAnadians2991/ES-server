@@ -13,6 +13,21 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CandidateEditModal } from '@/components/candidates/candidate-edit-modal'
+import { 
+  ArrowLeft, 
+  Edit, 
+  Phone, 
+  Mail, 
+  User, 
+  Euro, 
+  Calendar, 
+  MapPin, 
+  Car, 
+  Upload, 
+  FileText, 
+  MessageSquare, 
+  Pin 
+} from 'lucide-react'
 
 export default function CandidateDetailPage() {
   const params = useParams()
@@ -64,7 +79,7 @@ export default function CandidateDetailPage() {
         [field]: value
       })
       
-      setCandidate(updatedCandidate)
+      setCandidate(prev => prev ? { ...prev, [field]: value } : null)
       
       toast({
         title: 'Успішно',

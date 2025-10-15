@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth'
 
-// Отримати детальну інформацію про угоду
+// Отримати угоду за ID
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -32,9 +32,9 @@ export async function GET(
         } : {})
       },
       include: {
-        candidates: {
+        dealContacts: {
           include: {
-            candidate: true
+            contact: true
           }
         },
         activities: {
@@ -52,7 +52,7 @@ export async function GET(
 
     return NextResponse.json(deal)
   } catch (error) {
-    console.error('Error fetching deal detail:', error)
+    console.error('Error fetching deal:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -89,7 +89,6 @@ export async function PUT(
       workAddress,
       arrivalDate,
       transportType,
-      contacts,
       dealStage,
       dealStatus,
       totalAmount,
@@ -98,11 +97,10 @@ export async function PUT(
       recipientType,
       isReadyForAdmin,
       adminApproved,
-      submittedToPartner,
-      candidateIds
+      submittedToPartner
     } = body
 
-    // Перевіряємо права доступу
+    // Перевіряємо чи існує угода
     const existingDeal = await prisma.deal.findFirst({
       where: {
         id: dealId,
@@ -116,7 +114,6 @@ export async function PUT(
       return NextResponse.json({ error: 'Deal not found' }, { status: 404 })
     }
 
-    // Оновлюємо угоду
     const updatedDeal = await prisma.deal.update({
       where: { id: dealId },
       data: {
@@ -129,7 +126,6 @@ export async function PUT(
         workAddress,
         arrivalDate: arrivalDate ? new Date(arrivalDate) : null,
         transportType,
-        contacts,
         dealStage,
         dealStatus,
         totalAmount,
@@ -140,56 +136,6 @@ export async function PUT(
         adminApproved,
         submittedToPartner,
         updatedAt: new Date()
-      }
-    })
-
-    // Оновлюємо кандидатів якщо передано
-    if (candidateIds && candidateRoles) {
-      // Видаляємо старі зв'язки
-      await prisma.dealCandidate.deleteMany({
-        where: { dealId }
-      })
-
-      // Оновлюємо кандидатів - позначаємо що вони не в угоді
-      await prisma.candidate.updateMany({
-        where: { currentDealId: dealId },
-        data: { 
-          isInDeal: false,
-          currentDealId: null
-        }
-      })
-
-      // Додаємо нові зв'язки
-      if (candidateIds.length > 0) {
-        const dealCandidates = candidateIds.map((candidateId: number) => ({
-          dealId,
-          candidateId
-        }))
-
-        await prisma.dealCandidate.createMany({
-          data: dealCandidates
-        })
-
-        // Оновлюємо кандидатів
-        await prisma.candidate.updateMany({
-          where: { id: { in: candidateIds } },
-          data: { 
-            isInDeal: true,
-            currentDealId: dealId
-          }
-        })
-      }
-    }
-
-    // Створюємо активність про оновлення
-    await prisma.dealActivity.create({
-      data: {
-        dealId,
-        type: 'deal_updated',
-        title: 'Оновлено угоду',
-        description: `Оновлено угоду "${title}"`,
-        userId: user.id,
-        userName: user.fullName
       }
     })
 
@@ -222,34 +168,24 @@ export async function DELETE(
     }
 
     // Перевіряємо права доступу
+    if (user.role !== 'ADMIN' && user.role !== 'DIRECTOR') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    // Перевіряємо чи існує угода
     const existingDeal = await prisma.deal.findFirst({
-      where: {
-        id: dealId,
-        ...(user.role !== 'ADMIN' && user.role !== 'DIRECTOR' && user.branch ? {
-          branch: user.branch
-        } : {})
-      }
+      where: { id: dealId }
     })
 
     if (!existingDeal) {
       return NextResponse.json({ error: 'Deal not found' }, { status: 404 })
     }
 
-    // Оновлюємо кандидатів - позначаємо що вони не в угоді
-    await prisma.candidate.updateMany({
-      where: { currentDealId: dealId },
-      data: { 
-        isInDeal: false,
-        currentDealId: null
-      }
-    })
-
-    // Видаляємо угоду (каскадне видалення зв'язків)
     await prisma.deal.delete({
       where: { id: dealId }
     })
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ message: 'Deal deleted successfully' })
   } catch (error) {
     console.error('Error deleting deal:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

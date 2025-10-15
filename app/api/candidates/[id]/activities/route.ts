@@ -117,7 +117,7 @@ export async function POST(
         description,
         metadata: metadata ? JSON.stringify(metadata) : null,
         isPinned,
-        userId: user.id,
+        userId: user.userId,
         userName: user.fullName
       }
     })

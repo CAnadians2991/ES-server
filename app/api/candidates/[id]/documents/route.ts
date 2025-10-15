@@ -124,7 +124,7 @@ export async function POST(
         fileSize: buffer.length,
         mimeType: file.type,
         description,
-        uploadedBy: user.id
+        uploadedBy: user.userId
       }
     })
 
@@ -135,7 +135,7 @@ export async function POST(
         type: 'document_uploaded',
         title: 'Завантажено документ',
         description: `Завантажено документ: ${title || file.name}`,
-        userId: user.id,
+        userId: user.userId,
         userName: user.fullName,
         metadata: JSON.stringify({
           documentId: document.id,

@@ -22,9 +22,19 @@ import {
   Calendar,
   MessageSquare,
   Phone,
-  Mail,
-  Globe
+  MapPin,
+  ChevronUp,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ClipboardList,
+  Wallet,
+  Landmark,
+  Trash2
 } from 'lucide-react'
+import Link from 'next/link'
+import Image from 'next/image'
+import { Input } from '@/components/ui/input'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -208,10 +218,10 @@ export default function CRMLayout({ children }: LayoutProps) {
       {/* Основний контент */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Верхня панель */}
-        <header className="bg-white border-b border-gray-200 px-4 py-3">
+        <header className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-200 px-4 py-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-lg font-semibold bg-gradient-to-r from-green-600 to-emerald-500 bg-clip-text text-transparent">
                 {pathname === '/clients' ? 'Клієнти' :
                  pathname === '/candidates' ? 'Кандидати' :
                  pathname === '/deals' ? 'Угоди' :
@@ -224,35 +234,34 @@ export default function CRMLayout({ children }: LayoutProps) {
               </h2>
             </div>
             
-            <div className="flex items-center space-x-3">
-              {/* Пошук */}
+            <div className="flex items-center space-x-2">
+              {/* Компактний пошук */}
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3" />
                 <input
                   type="text"
                   placeholder="Пошук..."
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="pl-7 pr-3 py-1.5 border border-green-200 rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-32"
                 />
               </div>
               
-              {/* Сповіщення */}
-              <Button variant="ghost" size="sm" className="relative">
-                <Bell className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+              {/* Компактні кнопки */}
+              <Button variant="ghost" size="sm" className="relative p-1.5 h-7 w-7">
+                <Bell className="w-4 h-4" />
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1 py-0.5 rounded-full min-w-[16px] text-center">
                   5
                 </span>
               </Button>
               
-              {/* Налаштування */}
-              <Button variant="ghost" size="sm">
-                <Settings className="w-5 h-5" />
+              <Button variant="ghost" size="sm" className="p-1.5 h-7 w-7">
+                <Settings className="w-4 h-4" />
               </Button>
             </div>
           </div>
         </header>
 
         {/* Контент */}
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto bg-gradient-to-br from-green-50/30 to-emerald-50/30">
           {children}
         </main>
       </div>

@@ -9,7 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { CandidatesTableExcel } from '@/components/candidates/candidates-table-excel'
 import { CandidatesFilters } from '@/components/candidates/candidates-filters'
-import { AddCandidateDialog } from '@/components/candidates/add-candidate-dialog'
 import { useToast } from '@/hooks/use-toast'
 import { ProtectedRoute } from '@/components/auth/protected-route'
 import { useAuth } from '@/hooks/use-auth'
@@ -18,7 +17,6 @@ export default function CandidatesPage() {
   const { toast } = useToast()
   const { candidates, filters, isLoading, currentPage, totalPages, totalCount, setCandidates, setLoading, setError, setPage, setPagination } = useCandidatesStore()
   const { hasPermission } = useAuth()
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [activeTab, setActiveTab] = useState('candidates')
 
@@ -218,11 +216,6 @@ export default function CandidatesPage() {
         </Tabs>
       </div>
 
-      <AddCandidateDialog
-        open={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
-        onSuccess={loadCandidates}
-      />
       </div>
     </ProtectedRoute>
   )

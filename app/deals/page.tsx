@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Deal, DealDetail, Candidate, DEAL_STAGES, DEAL_STATUSES, DEAL_CANDIDATE_ROLES } from '@/types'
+import { Deal, DealDetail, Candidate, DEAL_STAGES, DEAL_STATUSES } from '@/types'
 import { useAuth } from '@/hooks/use-auth'
 import { api } from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
@@ -445,7 +445,7 @@ function CreateDealModal({
           <div>
             <Label>Виберіть кандидатів (їдуть разом)</Label>
             <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto border rounded p-2">
-              {candidates.filter(c => !c.isInDeal).map((candidate) => (
+              {candidates.map((candidate) => (
                 <div key={candidate.id} className="flex items-center space-x-2">
                   <input
                     type="checkbox"

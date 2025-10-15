@@ -67,7 +67,7 @@ export function CandidateEditModal({ candidate, isOpen, onClose, onSave }: Candi
       }
 
       const updatedCandidate = await api.candidates.update(candidate.id, updateData)
-      onSave(updatedCandidate)
+      onSave({ ...candidate, ...updateData })
       toast({
         title: 'Успішно',
         description: 'Дані кандидата оновлено',
@@ -201,7 +201,7 @@ export function CandidateEditModal({ candidate, isOpen, onClose, onSave }: Candi
                       <Input
                         id="passportExpiry"
                         type="date"
-                        value={formData.passportExpiry || ''}
+                        value={formData.passportExpiry instanceof Date ? formData.passportExpiry.toISOString().split('T')[0] : formData.passportExpiry || ''}
                         onChange={(e) => setFormData(prev => ({ ...prev, passportExpiry: e.target.value }))}
                       />
                     </div>
@@ -364,7 +364,7 @@ export function CandidateEditModal({ candidate, isOpen, onClose, onSave }: Candi
                       <Input
                         id="arrivalDate"
                         type="date"
-                        value={formData.arrivalDate || ''}
+                        value={formData.arrivalDate instanceof Date ? formData.arrivalDate.toISOString().split('T')[0] : formData.arrivalDate || ''}
                         onChange={(e) => setFormData(prev => ({ ...prev, arrivalDate: e.target.value }))}
                       />
                     </div>

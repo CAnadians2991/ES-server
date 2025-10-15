@@ -82,10 +82,10 @@ export default function LoginPage() {
           <CardTitle className="text-3xl font-bold text-slate-800">
             Європа Сервіс
           </CardTitle>
-          <CardDescription className="text-slate-600 mt-3 space-y-1">
+          <div className="text-slate-600 mt-3 space-y-1">
             <div className="font-medium">Ліцензоване кадрове агенство</div>
             <div className="text-sm">Працевлаштування в країнах Європи</div>
-          </CardDescription>
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <form onSubmit={handleSubmit} className="space-y-4">

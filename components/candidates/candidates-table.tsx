@@ -1,14 +1,12 @@
 "use client"
 
-import { useState } from 'react'
-import { Trash2, Edit } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import { useCandidatesStore } from '@/hooks/use-candidates'
 import { api } from '@/lib/api'
 import { formatDate, formatCurrency } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
 import type { Candidate } from '@/types'
-import { EditCandidateDialog } from './edit-candidate-dialog'
 
 interface CandidatesTableProps {
   candidates: Candidate[]
@@ -17,7 +15,6 @@ interface CandidatesTableProps {
 export function CandidatesTable({ candidates }: CandidatesTableProps) {
   const { toast } = useToast()
   const { deleteCandidate } = useCandidatesStore()
-  const [editingCandidate, setEditingCandidate] = useState<Candidate | null>(null)
 
   async function handleDelete(id: number) {
     if (!confirm('Ви впевнені, що хочете видалити цього кандидата?')) {
@@ -114,13 +111,6 @@ export function CandidatesTable({ candidates }: CandidatesTableProps) {
                   <div className="flex items-center justify-center gap-2">
                     <Button
                       size="sm"
-                      variant="outline"
-                      onClick={() => setEditingCandidate(candidate)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
                       variant="destructive"
                       onClick={() => handleDelete(candidate.id)}
                     >
@@ -133,14 +123,6 @@ export function CandidatesTable({ candidates }: CandidatesTableProps) {
           </tbody>
         </table>
       </div>
-
-      {editingCandidate && (
-        <EditCandidateDialog
-          candidate={editingCandidate}
-          open={!!editingCandidate}
-          onOpenChange={(open) => !open && setEditingCandidate(null)}
-        />
-      )}
     </>
   )
 }

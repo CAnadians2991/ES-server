@@ -135,7 +135,7 @@ export async function PUT(
         entityType: 'Candidate',
         entityId: candidateId,
         action: 'UPDATE',
-        userId: user.id,
+        userId: user.userId,
         userName: user.fullName,
         oldData: JSON.stringify(existingCandidate),
         newData: JSON.stringify(updatedCandidate),

@@ -287,13 +287,13 @@ export default function ClientsPage() {
 
   return (
     <CRMLayout>
-      <div className="p-6">
+      <div className="p-3">
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
-                <p className="text-red-700">{error}</p>
+                <AlertCircle className="w-4 h-4 text-red-500 mr-2" />
+                <p className="text-red-700 text-sm">{error}</p>
               </div>
               <Button 
                 variant="outline" 
@@ -303,6 +303,7 @@ export default function ClientsPage() {
                   Promise.all([fetchDeals(), fetchContacts()])
                     .finally(() => setLoading(false))
                 }}
+                className="text-xs px-2 py-1 h-6"
               >
                 Спробувати знову
               </Button>
@@ -310,25 +311,25 @@ export default function ClientsPage() {
           </div>
         )}
         
-        {/* iOS-подібний перемикач табів */}
-        <div className="flex justify-center mb-6">
-          <div className="bg-gray-100 rounded-lg p-1 flex">
+        {/* Компактний перемикач табів */}
+        <div className="flex justify-center mb-4">
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-1 flex border border-green-200">
             <button
               onClick={() => setActiveTab('deals')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
                 activeTab === 'deals'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-sm'
+                  : 'text-gray-600 hover:text-green-600'
               }`}
             >
               Угоди
             </button>
             <button
               onClick={() => setActiveTab('contacts')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
                 activeTab === 'contacts'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-sm'
+                  : 'text-gray-600 hover:text-green-600'
               }`}
             >
               Клієнти
@@ -525,28 +526,30 @@ export default function ClientsPage() {
 
         {/* Контент клієнтів */}
         {activeTab === 'contacts' && (
-          <div className="space-y-4">
-            {/* Список клієнтів */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-base font-semibold">Клієнти</h3>
-                <Button 
-                  onClick={() => setShowCreateContactForm(true)}
-                  size="sm"
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Додати контакт
-                </Button>
+          <div className="space-y-3">
+            {/* Компактний заголовок з кнопкою */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Users className="w-4 h-4 text-green-600" />
+                <h3 className="text-sm font-semibold text-gray-800">Контакти ({contacts.length})</h3>
               </div>
-              
-              <ContactsTableExcel
-                contacts={contacts}
-                onEdit={handleEditContact}
-                onDelete={handleDeleteContact}
-                onView={handleViewContact}
-                loading={loading}
-              />
+              <Button 
+                onClick={() => setShowCreateContactForm(true)}
+                size="sm"
+                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white text-xs px-3 py-1.5 h-7"
+              >
+                <Plus className="w-3 h-3 mr-1" />
+                Додати
+              </Button>
             </div>
+            
+            <ContactsTableExcel
+              contacts={contacts}
+              onEdit={handleEditContact}
+              onDelete={handleDeleteContact}
+              onView={handleViewContact}
+              loading={loading}
+            />
           </div>
         )}
 
@@ -576,19 +579,10 @@ export default function ClientsPage() {
             onClose={() => setShowCreateContactForm(false)}
             onSave={handleCreateContact}
             currentManager={{
-              id: user?.userId || 0,
+              id: user?.id || 0,
               name: user?.fullName || user?.username || 'Менеджер',
               branch: user?.branch || 'ЦО'
             }}
-          />
-        )}
-
-        {/* Модальне вікно створення угоди */}
-        {showCreateForm && (
-          <CreateDealModal
-            contacts={contacts}
-            onClose={() => setShowCreateForm(false)}
-            onCreate={handleCreateDeal}
           />
         )}
       </div>
