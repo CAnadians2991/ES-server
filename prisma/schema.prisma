@@ -7,6 +7,172 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Модель для контактів (потенційних кандидатів)
+model Contact {
+  id                Int       @id @default(autoincrement())
+  firstName         String    // Ім'я (обов'язкове)
+  lastName          String    // Прізвище (обов'язкове)
+  phone             String    @unique // Телефон (обов'язкове, унікальне)
+  age               Int       // Вік (обов'язкове)
+  candidateCountry  String?   // Країна проживання
+  vacancyCountry    String?   // Країна роботи
+  projectName       String?   // Назва проекту
+  candidateStatus   String?   // Статус контакту
+  notes             String?   // Примітки
+  
+  // Метадані
+  managerId         Int       // ID менеджера
+  managerName       String    // Ім'я менеджера
+  branch            String    // Філія менеджера
+  
+  // Передача відповідальності
+  originalManagerId Int?      // ID оригінального менеджера
+  originalManagerName String? // Ім'я оригінального менеджера
+  transferredAt     DateTime? // Дата передачі
+  transferredBy      Int?      // ID користувача який передав
+  transferredByName  String?   // Ім'я користувача який передав
+  transferReason     String?   // Причина передачі
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Зв'язки
+  dealContacts      DealContact[] // Контакти в угодах
+  transferRequests  ContactTransferRequest[] // Запити на передачу
+  
+  @@index([managerId])
+  @@index([branch])
+  @@index([candidateStatus])
+  @@index([phone])
+}
+
+// Модель для запитів на зміну відповідального за контакт
+model ContactTransferRequest {
+  id                Int       @id @default(autoincrement())
+  contactId         Int       // ID контакту
+  fromManagerId     Int       // ID менеджера, який створив контакт
+  toManagerId       Int       // ID менеджера, який запитує передачу
+  fromManagerName   String    // Ім'я менеджера, який створив контакт
+  toManagerName     String    // Ім'я менеджера, який запитує передачу
+  reason            String?   // Причина запиту
+  status            String    @default("Pending") // Pending, Approved, Rejected
+  approvedBy        Int?      // ID користувача який схвалив/відхилив
+  approvedByName    String?   // Ім'я користувача який схвалив/відхилив
+  approvedAt        DateTime? // Дата схвалення/відхилення
+  adminNotes        String?   // Примітки адміністратора
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Зв'язки
+  contact           Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  
+  @@index([contactId])
+  @@index([fromManagerId])
+  @@index([toManagerId])
+  @@index([status])
+}
+
+// Нова модель для угод (Deal)
+model Deal {
+  id              Int       @id @default(autoincrement())
+  title           String    // Назва угоди (наприклад: "Робота в Польщі - Склад")
+  description     String?   // Опис угоди
+  managerId       Int       // Менеджер який створив угоду
+  managerName     String    // Ім'я менеджера
+  branch          String    // Філія менеджера
+  vacancyCountry  String    // Країна роботи
+  projectName     String    // Назва проекту
+  partnerNumber   String?   // Номер партнера
+  workCity        String?   // Місто роботи
+  workAddress     String?   // Адреса роботи
+  arrivalDate     DateTime? // Дата прибуття
+  transportType   String?   // Тип транспорту
+  contactsInfo    String?   // Контакти на місці
+  
+  // Статуси та фінанси
+  dealStage       String    @default("Створена") // Стадія угоди
+  dealStatus      String    @default("Активна")   // Статус угоди
+  totalAmount     Float     @default(0)           // Загальна сума угоди
+  dealCurrency    String    @default("грн")       // Валюта угоди
+  paymentStatus   String?   // Статус оплати
+  recipientType   String?   // Тип отримувача
+  
+  // Метадані
+  isReadyForAdmin Boolean   @default(false)       // Готово для адміна
+  adminApproved   Boolean   @default(false)       // Схвалено адміном
+  submittedToPartner Boolean @default(false)     // Подано партнеру
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Зв'язки
+  dealContacts    DealContact[] // Контакти в угоді
+  activities      DealActivity[]  // Активності угоди
+  documents       DealDocument[]  // Документи угоди
+  
+  @@index([managerId])
+  @@index([branch])
+  @@index([dealStage])
+  @@index([dealStatus])
+  @@index([isReadyForAdmin])
+  @@index([createdAt])
+}
+
+// Проміжна таблиця для зв'язку угод з контактами
+model DealContact {
+  id          Int       @id @default(autoincrement())
+  dealId      Int
+  contactId   Int
+  createdAt   DateTime  @default(now())
+  
+  deal        Deal      @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  contact     Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  
+  @@unique([dealId, contactId])
+  @@index([dealId])
+  @@index([contactId])
+}
+
+// Активності для угод
+model DealActivity {
+  id          Int       @id @default(autoincrement())
+  dealId      Int
+  type        String    // Тип активності
+  title       String    // Заголовок активності
+  description String?   // Опис активності
+  userId      Int?      // Користувач який створив активність
+  userName    String?   // Ім'я користувача
+  metadata    String?   // JSON з додатковими даними
+  isPinned    Boolean   @default(false) // Закріплена активність
+  createdAt   DateTime  @default(now())
+  
+  deal        Deal      @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  
+  @@index([dealId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// Документи для угод
+model DealDocument {
+  id          Int       @id @default(autoincrement())
+  dealId      Int
+  type        String    // Тип документа
+  title       String    // Назва документа
+  fileName    String    // Ім'я файлу
+  filePath    String    // Шлях до файлу
+  fileSize    Int?      // Розмір файлу в байтах
+  mimeType    String?   // MIME тип файлу
+  description String?   // Опис документа
+  uploadedBy  Int?      // Користувач який завантажив
+  uploadedAt  DateTime  @default(now())
+  
+  deal        Deal      @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  
+  @@index([dealId])
+  @@index([type])
+  @@index([uploadedAt])
+}
+
 model Candidate {
   id                Int           @id @default(autoincrement())
   branch            String        @default("ЦО")
@@ -40,9 +206,12 @@ model Candidate {
   languageSkills    String?
   familyStatus      String?
   children          Int?
+  
   applications      Application[]
   auditLogs         AuditLog[]
   payments          Payment[]
+  activities        Activity[] // Стрічка активності кандидата
+  documents         Document[] // Документи кандидата
 
   @@index([branch])
   @@index([vacancyCountry])
@@ -210,4 +379,44 @@ model AuditLog {
   @@index([userId])
   @@index([createdAt])
   @@index([action])
+}
+
+// Нова модель для стрічки активності
+model Activity {
+  id          Int       @id @default(autoincrement())
+  candidateId Int
+  type        String    // Тип активності: comment, call, task, stage_change, etc.
+  title       String    // Заголовок активності
+  description String?   // Опис активності
+  userId      Int?      // Користувач який створив активність
+  userName    String?   // Ім'я користувача
+  metadata    String?   // JSON з додатковими даними
+  isPinned    Boolean   @default(false) // Закріплена активність
+  createdAt   DateTime  @default(now())
+  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+  @@index([type])
+  @@index([createdAt])
+  @@index([isPinned])
+}
+
+// Нова модель для документів та квитанцій
+model Document {
+  id          Int       @id @default(autoincrement())
+  candidateId Int
+  type        String    // Тип документа: receipt, invoice, contract, etc.
+  title       String    // Назва документа
+  fileName    String    // Ім'я файлу
+  filePath    String    // Шлях до файлу
+  fileSize    Int?      // Розмір файлу в байтах
+  mimeType    String?   // MIME тип файлу
+  description String?   // Опис документа
+  uploadedBy  Int?      // Користувач який завантажив
+  uploadedAt  DateTime  @default(now())
+  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+  @@index([type])
+  @@index([uploadedAt])
 }

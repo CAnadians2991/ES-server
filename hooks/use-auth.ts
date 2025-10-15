@@ -25,20 +25,32 @@ export function useAuth() {
     isLoading: true,
     isAuthenticated: false,
   })
+  const [isHydrated, setIsHydrated] = useState(false)
 
   useEffect(() => {
+    setIsHydrated(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isHydrated) return
+    
     const token = localStorage.getItem('auth_token')
     const userData = localStorage.getItem('user')
+
+    console.log('useAuth useEffect - token:', token ? 'exists' : 'missing')
+    console.log('useAuth useEffect - userData:', userData ? 'exists' : 'missing')
 
     if (token && userData) {
       try {
         const user = JSON.parse(userData)
+        console.log('useAuth - setting user:', user)
         setAuthState({
           user,
           isLoading: false,
           isAuthenticated: true,
         })
       } catch (error) {
+        console.error('useAuth - error parsing user data:', error)
         localStorage.removeItem('auth_token')
         localStorage.removeItem('user')
         setAuthState({
@@ -48,13 +60,50 @@ export function useAuth() {
         })
       }
     } else {
+      console.log('useAuth - no token or user data')
       setAuthState({
         user: null,
         isLoading: false,
         isAuthenticated: false,
       })
     }
-  }, [])
+  }, [isHydrated])
+
+  const refreshAuth = () => {
+    const token = localStorage.getItem('auth_token')
+    const userData = localStorage.getItem('user')
+
+    console.log('refreshAuth - token:', token ? 'exists' : 'missing')
+    console.log('refreshAuth - userData:', userData ? 'exists' : 'missing')
+
+    if (token && userData) {
+      try {
+        const user = JSON.parse(userData)
+        console.log('refreshAuth - setting user:', user)
+        setAuthState({
+          user,
+          isLoading: false,
+          isAuthenticated: true,
+        })
+      } catch (error) {
+        console.error('refreshAuth - error parsing user data:', error)
+        localStorage.removeItem('auth_token')
+        localStorage.removeItem('user')
+        setAuthState({
+          user: null,
+          isLoading: false,
+          isAuthenticated: false,
+        })
+      }
+    } else {
+      console.log('refreshAuth - no token or user data')
+      setAuthState({
+        user: null,
+        isLoading: false,
+        isAuthenticated: false,
+      })
+    }
+  }
 
   const login = (user: AuthUser, token: string) => {
     localStorage.setItem('auth_token', token)
@@ -195,8 +244,10 @@ export function useAuth() {
 
   return {
     ...authState,
+    isHydrated,
     login,
     logout,
+    refreshAuth,
     hasPermission,
     requireAuth,
     requirePermission,

@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { api } from '@/lib/api'
 import { useToast } from '@/hooks/use-toast'
 import { useCandidatesStore } from '@/hooks/use-candidates'
-import { Trash2, GripVertical, Copy, Clock } from 'lucide-react'
+import { Trash2, GripVertical, Copy, Clock, Eye } from 'lucide-react'
 import { CandidateHistoryModal } from './candidate-history-modal'
 import { Button } from '../ui/button'
 import { formatDate } from '@/lib/utils'
@@ -693,6 +693,10 @@ const renderCell = (candidate: Candidate, field: string, editingCell: { id: numb
     setHistoryModalOpen(true)
   }
 
+  function handleOpenDetail(candidateId: number) {
+    window.open(`/candidates/${candidateId}`, '_blank')
+  }
+
   const handleCopyRow = useCallback((candidate: Candidate) => {
     const rowData = [
       formatCandidateId(candidate.id),
@@ -859,6 +863,18 @@ const renderCell = (candidate: Candidate, field: string, editingCell: { id: numb
                     }}
                   >
                     <div className="flex items-center justify-center gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleOpenDetail(candidate.id)
+                        }}
+                        className="h-5 w-5 p-0 hover:bg-green-100 hover:text-green-600"
+                        title="Детальна картка"
+                      >
+                        <Eye className="h-3 w-3" />
+                      </Button>
                       {isAdmin && (
                         <Button
                           size="sm"

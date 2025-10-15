@@ -1,4 +1,4 @@
-import type { Candidate, LoginResponse, Statistics, User, Application, Vacancy, MonthlySalary, BranchExpense } from '@/types'
+import type { Candidate, CandidateDetail, Activity, Document, Deal, DealDetail, Contact, LoginResponse, Statistics, User, Application, Vacancy, MonthlySalary, BranchExpense } from '@/types'
 
 export async function fetcher<T>(url: string, options?: RequestInit): Promise<T> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
@@ -23,6 +23,27 @@ export async function fetcher<T>(url: string, options?: RequestInit): Promise<T>
 }
 
 export const api = {
+  contacts: {
+    getAll: (filters?: Record<string, string>) => {
+      const params = new URLSearchParams(filters).toString()
+      return fetcher<{ contacts: Contact[]; pagination: any }>(`/api/contacts${params ? `?${params}` : ''}`)
+    },
+    getById: (id: number) => fetcher<Contact>(`/api/contacts/${id}`),
+    create: (data: any) => fetcher<Contact>('/api/contacts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }),
+    update: (id: number, data: any) => fetcher<Contact>(`/api/contacts/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }),
+    delete: (id: number) => fetcher(`/api/contacts/${id}`, {
+      method: 'DELETE',
+    }),
+  },
+  
   candidates: {
     getAll: (filters?: Record<string, string>) => {
       const params = new URLSearchParams(filters).toString()
@@ -49,6 +70,39 @@ export const api = {
     bulkReorder: (orders: Array<{ id: number; sortOrder: number }>) => fetcher('/api/candidates/bulk-reorder', {
       method: 'POST',
       body: JSON.stringify({ orders }),
+    }),
+    getDetail: (id: number) => fetcher<CandidateDetail>(`/api/candidates/${id}/detail`),
+    getActivities: (id: number, page = 1, limit = 20) => 
+      fetcher<{ activities: Activity[]; pagination: any }>(`/api/candidates/${id}/activities?page=${page}&limit=${limit}`),
+    addActivity: (id: number, data: { type: string; title: string; description?: string; metadata?: any; isPinned?: boolean }) =>
+      fetcher<Activity>(`/api/candidates/${id}/activities`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    getDocuments: (id: number) => fetcher<Document[]>(`/api/candidates/${id}/documents`),
+    uploadDocument: (id: number, formData: FormData) => fetcher<Document>(`/api/candidates/${id}/documents`, {
+      method: 'POST',
+      body: formData,
+    }),
+  },
+  deals: {
+    getAll: (filters?: Record<string, string>) => {
+      const params = new URLSearchParams(filters).toString()
+      return fetcher<{ deals: Deal[]; pagination: any }>(`/api/deals${params ? `?${params}` : ''}`)
+    },
+    getOne: (id: number) => fetcher<DealDetail>(`/api/deals/${id}`),
+    create: (data: any) => fetcher<Deal>('/api/deals', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }),
+    update: (id: number, data: any) => fetcher<Deal>(`/api/deals/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }),
+    delete: (id: number) => fetcher(`/api/deals/${id}`, {
+      method: 'DELETE',
     }),
   },
   payments: {

@@ -1,18 +1,20 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/hooks/use-auth'
 import { api } from '@/lib/api'
 import type { LoginRequest, LoginResponse } from '@/types'
 
 export default function LoginPage() {
   const router = useRouter()
   const { toast } = useToast()
+  const { refreshAuth } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState<LoginRequest>({
     username: '',
@@ -32,12 +34,19 @@ export default function LoginPage() {
         localStorage.setItem('auth_token', result.token)
         localStorage.setItem('user', JSON.stringify(result.user))
         
+        console.log('Login successful, token saved:', result.token)
+        console.log('User saved:', result.user)
+        
         toast({
           title: 'Успішний вхід',
           description: `Вітаємо, ${result.user?.fullName}!`,
         })
 
-        router.push('/')
+        // Додаємо невелику затримку перед перенаправленням
+        setTimeout(() => {
+          console.log('Attempting to redirect to /')
+          router.push('/')
+        }, 1000)
       } else {
         toast({
           title: 'Помилка входу',

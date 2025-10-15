@@ -40,12 +40,17 @@ export async function POST(request: NextRequest) {
       { 
         userId: user.id, 
         username: user.username, 
-        role: user.role 
+        role: user.role,
+        branch: user.branch,
+        fullName: user.fullName
       },
       JWT_SECRET,
       { expiresIn: '24h' }
     )
 
+    console.log('Login successful for user:', user.username)
+    console.log('Token generated:', token.substring(0, 20) + '...')
+    
     return NextResponse.json({
       success: true,
       user: {

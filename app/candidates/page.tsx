@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useCandidatesStore } from '@/hooks/use-candidates'
 import { api } from '@/lib/api'
-import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { CandidatesTableExcel } from '@/components/candidates/candidates-table-excel'
 import { CandidatesFilters } from '@/components/candidates/candidates-filters'
 import { AddCandidateDialog } from '@/components/candidates/add-candidate-dialog'
@@ -19,6 +20,7 @@ export default function CandidatesPage() {
   const { hasPermission } = useAuth()
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [activeTab, setActiveTab] = useState('candidates')
 
   useEffect(() => {
     loadCandidates()
@@ -138,55 +140,82 @@ export default function CandidatesPage() {
       </header>
 
       <div className="max-w-[98%] mx-auto px-4 py-2">
-        <Card className="mb-2">
-          <CardContent className="py-3">
-            <CandidatesFilters onAddCandidate={handleAddCandidate} />
-          </CardContent>
-        </Card>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="candidates">Кандидати</TabsTrigger>
+            <TabsTrigger value="deals">Угоди</TabsTrigger>
+          </TabsList>
 
-        <Card>
-          <CardContent className="p-0">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-success mx-auto mb-4"></div>
-                  <p className="text-gray-500">Завантаження...</p>
-                </div>
-              </div>
-            ) : (
-              <>
-                <CandidatesTableExcel candidates={candidates} isFullscreen={isFullscreen} />
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-between px-4 py-2 border-t bg-gray-50">
-                    <div className="text-sm text-gray-600">
-                      Всього: {totalCount} | Сторінка {currentPage} з {totalPages}
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setPage(currentPage - 1)}
-                        disabled={currentPage === 1}
-                        className="h-7 text-xs"
-                      >
-                        ← Попередня
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setPage(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                        className="h-7 text-xs"
-                      >
-                        Наступна →
-                      </Button>
+          <TabsContent value="candidates" className="space-y-4">
+            <Card className="mb-2">
+              <CardContent className="py-3">
+                <CandidatesFilters onAddCandidate={handleAddCandidate} />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-0">
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-success mx-auto mb-4"></div>
+                      <p className="text-gray-500">Завантаження...</p>
                     </div>
                   </div>
+                ) : (
+                  <>
+                    <CandidatesTableExcel candidates={candidates} isFullscreen={isFullscreen} />
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between px-4 py-2 border-t bg-gray-50">
+                        <div className="text-sm text-gray-600">
+                          Всього: {totalCount} | Сторінка {currentPage} з {totalPages}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setPage(currentPage - 1)}
+                            disabled={currentPage === 1}
+                            className="h-7 text-xs"
+                          >
+                            ← Попередня
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setPage(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                            className="h-7 text-xs"
+                          >
+                            Наступна →
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
-              </>
-            )}
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="deals" className="space-y-4">
+            <Card>
+              <CardContent className="p-6">
+                <div className="text-center">
+                  <h3 className="text-lg font-medium mb-2">Модуль угод</h3>
+                  <p className="text-gray-600 mb-4">
+                    Перейдіть до модуля угод для створення та управління угодами з груповими кандидатами
+                  </p>
+                  <Link href="/deals">
+                    <Button>
+                      Перейти до угод
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       <AddCandidateDialog

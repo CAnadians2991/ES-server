@@ -1,221 +1,336 @@
-"use client"
+'use client'
 
-import { useEffect, useState } from 'react'
-import Link from 'next/link'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/hooks/use-auth'
+import { useToast } from '@/hooks/use-toast'
 import { api } from '@/lib/api'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { formatCurrency } from '@/lib/utils'
-import type { Statistics } from '@/types'
-import { ProtectedRoute } from '@/components/auth/protected-route'
+import { Contact, Deal } from '@/types'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { 
+  Users, 
+  CheckCircle, 
+  Clock, 
+  AlertCircle, 
+  Euro,
+  TrendingUp,
+  BarChart3,
+  PieChart,
+  ArrowLeft
+} from 'lucide-react'
+
+interface StatisticsData {
+  totalContacts: number
+  workingContacts: number
+  readyContacts: number
+  dealContacts: number
+  totalDeals: number
+  activeDeals: number
+  pendingDeals: number
+  completedDeals: number
+  totalRevenue: number
+  managersStats?: Array<{
+    managerId: number
+    managerName: string
+    branch: string
+    contactsCount: number
+    dealsCount: number
+    revenue: number
+  }>
+}
 
 export default function StatisticsPage() {
-  const [statistics, setStatistics] = useState<Statistics | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
+  const { user, hasPermission, isHydrated } = useAuth()
+  const { toast } = useToast()
+  
+  const [statistics, setStatistics] = useState<StatisticsData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [timeRange, setTimeRange] = useState<'week' | 'month' | 'quarter' | 'year'>('month')
 
   useEffect(() => {
-    loadStatistics()
-  }, [])
+    if (isHydrated) {
+      fetchStatistics()
+    }
+  }, [isHydrated, timeRange])
 
-  async function loadStatistics() {
+  const fetchStatistics = async () => {
     try {
-      const data = await api.statistics.get() as any
-      setStatistics(data)
+      setLoading(true)
+      
+      // Отримуємо контакти та угоди
+      const [contactsResponse, dealsResponse] = await Promise.all([
+        api.contacts.getAll(),
+        api.deals.getAll()
+      ])
+      
+      const contacts = contactsResponse.contacts || []
+      const deals = dealsResponse.deals || []
+      
+      // Розрахунок статистики залежно від ролі
+      let stats: StatisticsData = {
+        totalContacts: contacts.length,
+        workingContacts: contacts.filter(c => c.candidateStatus === 'Працює').length,
+        readyContacts: contacts.filter(c => c.candidateStatus === 'Готовий до виїзду').length,
+        dealContacts: contacts.filter(c => c.candidateStatus === 'В угоді').length,
+        totalDeals: deals.length,
+        activeDeals: deals.filter(d => d.dealStage === 'ACTIVE').length,
+        pendingDeals: deals.filter(d => d.dealStage === 'PENDING').length,
+        completedDeals: deals.filter(d => d.dealStage === 'COMPLETED').length,
+        totalRevenue: deals.reduce((sum, deal) => sum + deal.totalAmount, 0)
+      }
+
+      // Для директора та керівника філії - додаємо статистику по менеджерах
+      if (user?.role === 'DIRECTOR' || user?.role === 'ADMIN') {
+        const managersMap = new Map<number, {
+          managerId: number
+          managerName: string
+          branch: string
+          contactsCount: number
+          dealsCount: number
+          revenue: number
+        }>()
+
+        // Групуємо контакти по менеджерах
+        contacts.forEach(contact => {
+          const key = contact.managerId
+          if (!managersMap.has(key)) {
+            managersMap.set(key, {
+              managerId: contact.managerId,
+              managerName: contact.managerName,
+              branch: contact.branch,
+              contactsCount: 0,
+              dealsCount: 0,
+              revenue: 0
+            })
+          }
+          managersMap.get(key)!.contactsCount++
+        })
+
+        // Групуємо угоди по менеджерах
+        deals.forEach(deal => {
+          const key = deal.managerId
+          if (managersMap.has(key)) {
+            managersMap.get(key)!.dealsCount++
+            managersMap.get(key)!.revenue += deal.totalAmount
+          }
+        })
+
+        stats.managersStats = Array.from(managersMap.values())
+      }
+
+      setStatistics(stats)
     } catch (error) {
-      console.error('Error loading statistics:', error)
+      console.error('Error fetching statistics:', error)
+      toast({
+        title: 'Помилка',
+        description: 'Не вдалося завантажити статистику',
+        variant: 'destructive',
+      })
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 
-  if (isLoading) {
+  if (!isHydrated || loading || !user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600"></div>
+      </div>
+    )
+  }
+
+  if (!hasPermission('statistics', 'read')) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-success mx-auto mb-4"></div>
-          <p className="text-gray-500">Завантаження...</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Доступ заборонено</h1>
+          <p className="text-gray-600 mb-4">У вас немає дозволу на перегляд статистики</p>
+          <Button onClick={() => router.push('/')}>
+            Повернутися на головну
+          </Button>
         </div>
       </div>
     )
   }
 
-  if (!statistics) {
-    return null
-  }
-
   return (
-    <ProtectedRoute requiredPermission={{ resource: 'statistics', action: 'read' }}>
-      <div className="min-h-screen bg-gray-50">
-      <header className="bg-gradient-to-r from-success to-success-light text-white py-6 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4">
-          <Link href="/" className="text-white/80 hover:text-white text-sm mb-2 block">
-            ← Повернутися на головну
-          </Link>
-          <h1 className="text-3xl font-bold">Статистика та аналітика</h1>
-          <p className="text-white/90 mt-1">Детальна аналітика роботи з кандидатами</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b shadow-sm">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
+          <div className="flex items-center justify-between py-3">
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => router.push('/')}
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                До модулів
+              </Button>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">Статистика</h1>
+                <p className="text-xs text-gray-500">
+                  {user.role === 'MANAGER' ? 'Ваша статистика' : 
+                   user.role === 'DIRECTOR' ? `Статистика філії ${user.branch}` : 
+                   'Загальна статистика'}
+                </p>
+              </div>
+            </div>
+            
+            {/* Фільтр по часу */}
+            <div className="flex items-center gap-2">
+              <select 
+                value={timeRange}
+                onChange={(e) => setTimeRange(e.target.value as any)}
+                className="px-3 py-1 text-sm border border-gray-300 rounded-md"
+              >
+                <option value="week">Тиждень</option>
+                <option value="month">Місяць</option>
+                <option value="quarter">Квартал</option>
+                <option value="year">Рік</option>
+              </select>
+            </div>
+          </div>
         </div>
-      </header>
+      </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-4xl font-bold text-success">{statistics.totalCandidates}</CardTitle>
-              <CardDescription>Всього кандидатів</CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-4xl font-bold text-green-600">{statistics.workingCandidates}</CardTitle>
-              <CardDescription>Працюють зараз</CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-4xl font-bold text-orange-600">{statistics.readyCandidates}</CardTitle>
-              <CardDescription>Готові до виїзду</CardDescription>
-            </CardHeader>
-          </Card>
-        </div>
-
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Воронка конверсії</CardTitle>
-            <CardDescription>Відстеження кандидатів на кожному етапі</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[
-                { label: 'Зареєстровано', count: statistics.registeredCandidates, color: 'bg-blue-500' },
-                { label: 'Готові до виїзду', count: statistics.readyCandidates, color: 'bg-green-500' },
-                { label: 'В дорозі', count: statistics.travelingCandidates, color: 'bg-orange-500' },
-                { label: 'Прибули', count: statistics.arrivedCandidates, color: 'bg-cyan-500' },
-                { label: 'Працюють', count: statistics.workingCandidates, color: 'bg-green-600' },
-              ].map((stage) => {
-                const percentage = statistics.totalCandidates > 0 
-                  ? (stage.count / statistics.totalCandidates) * 100 
-                  : 0
-                return (
-                  <div key={stage.label}>
-                    <div className="flex justify-between mb-1">
-                      <span className="font-medium">{stage.label}</span>
-                      <span className="font-bold">{stage.count}</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-6">
-                      <div
-                        className={`h-6 rounded-full ${stage.color} flex items-center justify-center text-white text-xs font-bold`}
-                        style={{ width: `${percentage}%` }}
-                      >
-                        {percentage > 10 && `${percentage.toFixed(1)}%`}
-                      </div>
-                    </div>
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4">
+        {statistics && (
+          <>
+            {/* Основна статистика */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <Card className="p-4 bg-blue-50 border-blue-200">
+                <div className="flex items-center">
+                  <Users className="w-6 h-6 text-blue-500 mr-2" />
+                  <div>
+                    <p className="text-xs font-medium text-blue-600">Всього клієнтів</p>
+                    <p className="text-lg font-bold text-blue-700">{statistics.totalContacts}</p>
                   </div>
-                )
-              })}
+                </div>
+              </Card>
+              
+              <Card className="p-4 bg-green-50 border-green-200">
+                <div className="flex items-center">
+                  <CheckCircle className="w-6 h-6 text-green-500 mr-2" />
+                  <div>
+                    <p className="text-xs font-medium text-green-600">Працюють</p>
+                    <p className="text-lg font-bold text-green-700">{statistics.workingContacts}</p>
+                  </div>
+                </div>
+              </Card>
+              
+              <Card className="p-4 bg-yellow-50 border-yellow-200">
+                <div className="flex items-center">
+                  <Clock className="w-6 h-6 text-yellow-500 mr-2" />
+                  <div>
+                    <p className="text-xs font-medium text-yellow-600">Готові до виїзду</p>
+                    <p className="text-lg font-bold text-yellow-700">{statistics.readyContacts}</p>
+                  </div>
+                </div>
+              </Card>
+              
+              <Card className="p-4 bg-purple-50 border-purple-200">
+                <div className="flex items-center">
+                  <AlertCircle className="w-6 h-6 text-purple-500 mr-2" />
+                  <div>
+                    <p className="text-xs font-medium text-purple-600">В угодах</p>
+                    <p className="text-lg font-bold text-purple-700">{statistics.dealContacts}</p>
+                  </div>
+                </div>
+              </Card>
             </div>
-            <div className="mt-6 p-4 bg-green-50 rounded-lg border-l-4 border-green-500">
-              <p className="font-medium">
-                Конверсія реєстрація → робота: <strong className="text-green-600">{statistics.conversionRate.toFixed(1)}%</strong>
-              </p>
-              <p className="text-sm text-gray-600 mt-1">
-                Оптимальна конверсія в рекрутингу становить 60-75%
-              </p>
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Фінансова ефективність</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center p-4 bg-green-50 rounded-lg">
-                <div className="text-3xl font-bold text-green-600">{formatCurrency(statistics.monthlyReceived)}</div>
-                <div className="text-sm text-gray-600 mt-1">Отримано цього місяця</div>
-              </div>
-              <div className="text-center p-4 bg-orange-50 rounded-lg">
-                <div className="text-3xl font-bold text-orange-600">{statistics.pendingPayments}</div>
-                <div className="text-sm text-gray-600 mt-1">Очікується оплат</div>
-              </div>
-              <div className="text-center p-4 bg-blue-50 rounded-lg">
-                <div className="text-3xl font-bold text-blue-600">{formatCurrency(statistics.avgPayment)}</div>
-                <div className="text-sm text-gray-600 mt-1">Середня оплата</div>
-              </div>
+            {/* Статистика угод */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <Card className="p-4 bg-indigo-50 border-indigo-200">
+                <div className="flex items-center">
+                  <BarChart3 className="w-6 h-6 text-indigo-500 mr-2" />
+                  <div>
+                    <p className="text-xs font-medium text-indigo-600">Всього угод</p>
+                    <p className="text-lg font-bold text-indigo-700">{statistics.totalDeals}</p>
+                  </div>
+                </div>
+              </Card>
+              
+              <Card className="p-4 bg-emerald-50 border-emerald-200">
+                <div className="flex items-center">
+                  <TrendingUp className="w-6 h-6 text-emerald-500 mr-2" />
+                  <div>
+                    <p className="text-xs font-medium text-emerald-600">Активні</p>
+                    <p className="text-lg font-bold text-emerald-700">{statistics.activeDeals}</p>
+                  </div>
+                </div>
+              </Card>
+              
+              <Card className="p-4 bg-amber-50 border-amber-200">
+                <div className="flex items-center">
+                  <Clock className="w-6 h-6 text-amber-500 mr-2" />
+                  <div>
+                    <p className="text-xs font-medium text-amber-600">В очікуванні</p>
+                    <p className="text-lg font-bold text-amber-700">{statistics.pendingDeals}</p>
+                  </div>
+                </div>
+              </Card>
+              
+              <Card className="p-4 bg-rose-50 border-rose-200">
+                <div className="flex items-center">
+                  <Euro className="w-6 h-6 text-rose-500 mr-2" />
+                  <div>
+                    <p className="text-xs font-medium text-rose-600">Дохід</p>
+                    <p className="text-lg font-bold text-rose-700">
+                      {statistics.totalRevenue.toLocaleString()} грн
+                    </p>
+                  </div>
+                </div>
+              </Card>
             </div>
-            <div className="mt-4 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-              <p className="font-medium">
-                Рівень оплачуваності: <strong className="text-blue-600">{statistics.paymentRate.toFixed(1)}%</strong>
-              </p>
-              <p className="text-sm text-gray-600 mt-1">
-                Високий рівень оплачуваності свідчить про якість розміщення та задоволеність партнерів
-              </p>
-            </div>
-          </CardContent>
-        </Card>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Ефективність обробки</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span>Всього кандидатів:</span>
-                  <span className="font-bold">{statistics.totalCandidates}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Працюють зараз:</span>
-                  <span className="font-bold text-green-600">{statistics.workingCandidates}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Завершили роботу:</span>
-                  <span className="font-bold">{statistics.finishedCandidates}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Не доїхали:</span>
-                  <span className="font-bold text-red-600">{statistics.notArrivedCandidates}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Якість партнерств</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span>Активних партнерів:</span>
-                  <span className="font-bold">{statistics.activePartners}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Топ партнер:</span>
-                  <span className="font-bold">{statistics.topPartner}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Кандидатів на партнера:</span>
-                  <span className="font-bold">{statistics.avgCandidatesPerPartner.toFixed(1)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Цього місяця:</span>
-                  <span className="font-bold">{statistics.thisMonthCandidates}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Цього року:</span>
-                  <span className="font-bold">{statistics.thisYearCandidates}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            {/* Статистика по менеджерах (тільки для директора та адміна) */}
+            {statistics.managersStats && statistics.managersStats.length > 0 && (
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <PieChart className="w-5 h-5" />
+                    Статистика по менеджерах
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-2">Менеджер</th>
+                          <th className="text-left py-2">Філія</th>
+                          <th className="text-right py-2">Клієнти</th>
+                          <th className="text-right py-2">Угоди</th>
+                          <th className="text-right py-2">Дохід</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {statistics.managersStats.map((manager) => (
+                          <tr key={manager.managerId} className="border-b hover:bg-gray-50">
+                            <td className="py-2 font-medium">{manager.managerName}</td>
+                            <td className="py-2 text-gray-600">{manager.branch}</td>
+                            <td className="py-2 text-right">{manager.contactsCount}</td>
+                            <td className="py-2 text-right">{manager.dealsCount}</td>
+                            <td className="py-2 text-right font-medium">
+                              {manager.revenue.toLocaleString()} грн
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </>
+        )}
       </div>
-      </div>
-    </ProtectedRoute>
+    </div>
   )
 }
-

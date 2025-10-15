@@ -42,6 +42,72 @@ async function main() {
     },
   })
 
+  // Менеджери для тестування згідно з BUSINESS_LOGIC.md
+  await prisma.user.upsert({
+    where: { username: 'manager_kiev' },
+    update: { password: defaultPassword },
+    create: {
+      username: 'manager_kiev',
+      password: defaultPassword,
+      role: 'MANAGER',
+      fullName: 'Тетяна Чуприна',
+      branch: 'Київ',
+      isActive: true,
+    },
+  })
+
+  await prisma.user.upsert({
+    where: { username: 'manager_lviv' },
+    update: { password: defaultPassword },
+    create: {
+      username: 'manager_lviv',
+      password: defaultPassword,
+      role: 'MANAGER',
+      fullName: 'Менеджер Львів',
+      branch: 'Львів',
+      isActive: true,
+    },
+  })
+
+  await prisma.user.upsert({
+    where: { username: 'manager_odessa' },
+    update: { password: defaultPassword },
+    create: {
+      username: 'manager_odessa',
+      password: defaultPassword,
+      role: 'MANAGER',
+      fullName: 'Діана Сологуб',
+      branch: 'Одеса',
+      isActive: true,
+    },
+  })
+
+  await prisma.user.upsert({
+    where: { username: 'manager_kharkiv' },
+    update: { password: defaultPassword },
+    create: {
+      username: 'manager_kharkiv',
+      password: defaultPassword,
+      role: 'MANAGER',
+      fullName: 'Менеджер Харків',
+      branch: 'Харків',
+      isActive: true,
+    },
+  })
+
+  await prisma.user.upsert({
+    where: { username: 'manager_dnipro' },
+    update: { password: defaultPassword },
+    create: {
+      username: 'manager_dnipro',
+      password: defaultPassword,
+      role: 'MANAGER',
+      fullName: 'Менеджер Дніпро',
+      branch: 'Дніпро',
+      isActive: true,
+    },
+  })
+
   const candidates = [
     { branch: 'ЦО', responsible: 'Тетяна Чуприна', firstName: 'Анатолій', lastName: 'Шепотков', phone: '380501234567', age: 22, candidateCountry: 'Україна', vacancyCountry: 'Польща', projectName: 'ID Logistics (ZARA)', partnerNumber: '№3', arrivalDate: new Date('2024-10-27'), candidateStatus: 'Готовий до виїзду', paymentAmount: 15000, paymentStatus: 'Очікується', recipientType: 'ТОВ ЕВ', comment: 'Термінова виплата' },
     { branch: 'Рівне', responsible: 'Наталія Жиган', firstName: 'Тетяна', lastName: 'Площенюк', phone: '380671234567', age: 34, candidateCountry: 'Україна', vacancyCountry: 'Чехія', projectName: 'DHL AMAZON', partnerNumber: '№1', arrivalDate: new Date('2024-10-28'), candidateStatus: 'Працює', paymentAmount: 12000, paymentStatus: 'Отримано', recipientType: 'ФОП Коктов', comment: '' },

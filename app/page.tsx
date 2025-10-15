@@ -1,275 +1,325 @@
 "use client"
 
-import Link from "next/link"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { useAuth } from "@/hooks/use-auth"
+import CRMLayout from "@/components/layout/crm-layout"
+import { 
+  Users, 
+  Briefcase, 
+  TrendingUp, 
+  MessageSquare, 
+  Plus,
+  ChevronDown,
+  ChevronUp,
+  Send
+} from "lucide-react"
 
 export default function HomePage() {
-  const { user, logout, hasPermission } = useAuth()
+  const { user, hasPermission, isHydrated } = useAuth()
+  const [chatCollapsed, setChatCollapsed] = useState(false)
+  const [stats, setStats] = useState({
+    contacts: 0,
+    deals: 0,
+    candidates: 0,
+    todayContacts: 0
+  })
+
+  useEffect(() => {
+    // Завантаження статистики
+    const fetchStats = async () => {
+      try {
+        // Тут буде API для отримання статистики
+        setStats({
+          contacts: 156,
+          deals: 23,
+          candidates: 89,
+          todayContacts: 5
+        })
+      } catch (error) {
+        console.error('Помилка завантаження статистики:', error)
+      }
+    }
+
+    if (isHydrated) {
+      fetchStats()
+    }
+  }, [isHydrated])
+
+  if (!isHydrated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600"></div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Завантаження...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100">
-        <div className="container mx-auto px-4 py-8">
-          {/* Header */}
-          <div className="bg-white rounded-2xl p-8 shadow-md border border-gray-200 mb-8">
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <div className="flex items-center gap-4 mb-3">
-                  <div className="w-14 h-14 bg-slate-800 rounded-xl flex items-center justify-center shadow-md">
-                    <span className="text-3xl">🇪🇺</span>
-                  </div>
-                  <div>
-                    <h1 className="text-3xl font-bold text-slate-800 mb-1">
-                      Європа Сервіс
-                    </h1>
-                    <p className="text-slate-600 text-sm">Ліцензоване кадрове агенство</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-6 text-sm text-slate-600 mt-4 pl-[72px]">
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                    <span>Ліцензія МОН України</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-                    <span>5 філій по Україні</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
-                    <span>Працюємо з 2018 року</span>
-                  </div>
-                </div>
+      <CRMLayout>
+        <div className="flex h-full">
+          {/* Основний контент - Дашборд */}
+          <div className={`transition-all duration-300 ${chatCollapsed ? 'w-full' : 'w-3/5'}`}>
+            <div className="p-6">
+              {/* Заголовок */}
+              <div className="mb-6">
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                  Дашборд
+                </h1>
+                <p className="text-gray-600">
+                  Вітаємо, {user.fullName || user.username}! Ось ваша статистика
+                </p>
               </div>
-              <div className="flex items-center gap-4">
-                <div className="text-right border-l border-gray-200 pl-4">
-                  <p className="text-sm text-slate-500 mb-1">Авторизовано як</p>
-                  <p className="font-semibold text-slate-800">{user?.fullName}</p>
-                  <span className="inline-block mt-1 px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-medium">
-                    {user?.role}
-                  </span>
-                </div>
-                <Button 
-                  onClick={logout}
-                  variant="outline"
-                  className="border-slate-300 text-slate-700 hover:bg-slate-50 transition-all duration-300"
-                >
-                  Вийти
-                </Button>
+
+              {/* Статистичні картки */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Контакти</p>
+                        <p className="text-2xl font-bold text-blue-600">{stats.contacts}</p>
+                        <p className="text-xs text-green-600">+{stats.todayContacts} сьогодні</p>
+                      </div>
+                      <Users className="w-8 h-8 text-blue-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Угоди</p>
+                        <p className="text-2xl font-bold text-green-600">{stats.deals}</p>
+                        <p className="text-xs text-gray-500">Активні</p>
+                      </div>
+                      <Briefcase className="w-8 h-8 text-green-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Кандидати</p>
+                        <p className="text-2xl font-bold text-purple-600">{stats.candidates}</p>
+                        <p className="text-xs text-gray-500">В обробці</p>
+                      </div>
+                      <TrendingUp className="w-8 h-8 text-purple-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Конверсія</p>
+                        <p className="text-2xl font-bold text-orange-600">24%</p>
+                        <p className="text-xs text-green-600">+2% цього місяця</p>
+                      </div>
+                      <TrendingUp className="w-8 h-8 text-orange-600" />
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
+
+              {/* Швидкі дії */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                {hasPermission('clients', 'write') && (
+                  <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <Plus className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-gray-900">Новий контакт</h3>
+                          <p className="text-sm text-gray-600">Додати клієнта</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {hasPermission('deals', 'write') && (
+                  <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                          <Briefcase className="w-5 h-5 text-green-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-gray-900">Нова угода</h3>
+                          <p className="text-sm text-gray-600">Створити угоду</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <MessageSquare className="w-5 h-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-gray-900">Чат</h3>
+                        <p className="text-sm text-gray-600">Комунікація з командою</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Останні дії */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Останні дії</CardTitle>
+                  <CardDescription>Нещодавні зміни в системі</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <Users className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">Створено новий контакт</p>
+                        <p className="text-xs text-gray-500">Іван Петренко • 2 години тому</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                        <Briefcase className="w-4 h-4 text-green-600" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">Оновлено угоду #123</p>
+                        <p className="text-xs text-gray-500">Марія Коваленко • 4 години тому</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Кандидати */}
-            {hasPermission('candidates', 'read') && (
-              <Link href="/candidates">
-                <Card className="bg-white border border-gray-200 shadow-md hover:shadow-lg hover:border-slate-300 transition-all duration-300 cursor-pointer h-full group">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3 text-2xl">
-                      <span className="text-4xl group-hover:scale-110 transition-transform">👥</span>
-                      <span className="text-slate-800">Кандидати</span>
-                    </CardTitle>
-                    <CardDescription className="text-gray-600">
-                      Управління базою кандидатів, статуси, фільтрація та статистика
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-md transition-all duration-300">
-                      Відкрити модуль
+          {/* Бічна панель чату */}
+          {!chatCollapsed && (
+            <div className="w-2/5 border-l border-gray-200 bg-white">
+              <div className="h-full flex flex-col">
+                {/* Заголовок чату */}
+                <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900">Командний чат</h2>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setChatCollapsed(true)}
+                    className="p-1"
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                {/* Канали */}
+                <div className="p-4 border-b border-gray-200">
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">Канали</h3>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-sm text-gray-600">#загальний</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <span className="text-sm text-gray-600">#маркетинг</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                      <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                      <span className="text-sm text-gray-600">#техпідтримка</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Повідомлення */}
+                <div className="flex-1 p-4 overflow-y-auto">
+                  <div className="space-y-3">
+                    <div className="flex gap-2">
+                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs font-medium">А</span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-gray-900">Антон Подaш</span>
+                          <span className="text-xs text-gray-500">10:30</span>
+                        </div>
+                        <p className="text-sm text-gray-700">Привіт! Є нові заявки на роботу</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs font-medium">М</span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-gray-900">Марія Коваленко</span>
+                          <span className="text-xs text-gray-500">10:32</span>
+                        </div>
+                        <p className="text-sm text-gray-700">Перевірю зараз</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Поле введення */}
+                <div className="p-4 border-t border-gray-200">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Написати повідомлення..."
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <Button size="sm" className="px-3">
+                      <Send className="w-4 h-4" />
                     </Button>
-                  </CardContent>
-                </Card>
-              </Link>
-            )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
-            {/* Оплати */}
-            {hasPermission('payments', 'read') && (
-              <Link href="/payments">
-                <Card className="bg-white border border-gray-200 shadow-md hover:shadow-lg hover:border-slate-300 transition-all duration-300 cursor-pointer h-full group">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-2xl">
-                      <span className="text-4xl group-hover:scale-110 transition-transform">💰</span>
-                      <span className="text-slate-800">Оплати</span>
-                    </CardTitle>
-                    <CardDescription>
-                      Облік платежів від партнерів, фінансова статистика
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button className="w-full bg-slate-800 hover:bg-slate-900 text-white transition-all duration-300">Відкрити модуль</Button>
-                  </CardContent>
-                </Card>
-              </Link>
-            )}
-
-            {/* Статистика */}
-            {hasPermission('statistics', 'read') && (
-              <Link href="/statistics">
-                <Card className="bg-white border border-gray-200 shadow-md hover:shadow-lg hover:border-slate-300 transition-all duration-300 cursor-pointer h-full group">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-2xl">
-                      <span className="text-3xl">📊</span>
-                      Статистика
-                    </CardTitle>
-                    <CardDescription>
-                      Детальна аналітика, воронка конверсії, звіти
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button className="w-full bg-slate-800 hover:bg-slate-900 text-white transition-all duration-300">Відкрити модуль</Button>
-                  </CardContent>
-                </Card>
-              </Link>
-            )}
-
-            {/* Вакансії */}
-            {hasPermission('vacancies', 'read') && (
-              <Link href="/vacancies">
-                <Card className="bg-white border border-gray-200 shadow-md hover:shadow-lg hover:border-slate-300 transition-all duration-300 cursor-pointer h-full group">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-2xl">
-                      <span className="text-3xl">💼</span>
-                      Вакансії
-                    </CardTitle>
-                    <CardDescription>
-                      Актуальні вакансії партнерів в Європі
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button className="w-full bg-slate-800 hover:bg-slate-900 text-white transition-all duration-300">Відкрити модуль</Button>
-                  </CardContent>
-                </Card>
-              </Link>
-            )}
-
-            {/* Подання */}
-            {hasPermission('applications', 'read') && (
-              <Link href="/applications">
-                <Card className="bg-white border border-gray-200 shadow-md hover:shadow-lg hover:border-slate-300 transition-all duration-300 cursor-pointer h-full group">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-2xl">
-                      <span className="text-3xl">📋</span>
-                      Подання
-                    </CardTitle>
-                    <CardDescription>
-                      Подання кандидатів на вакансії партнерів
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button className="w-full bg-slate-800 hover:bg-slate-900 text-white transition-all duration-300">Відкрити модуль</Button>
-                  </CardContent>
-                </Card>
-              </Link>
-            )}
-
-            {/* Виплати партнерів */}
-            {hasPermission('partnerPayments', 'read') && (
-              <Link href="/partner-payments">
-                <Card className="bg-white border border-gray-200 shadow-md hover:shadow-lg hover:border-slate-300 transition-all duration-300 cursor-pointer h-full group">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-2xl">
-                      <span className="text-3xl">💸</span>
-                      Виплати партнерів
-                    </CardTitle>
-                    <CardDescription>
-                      Виплати від партнерів (конфіденційно)
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button className="w-full bg-slate-800 hover:bg-slate-900 text-white transition-all duration-300">Відкрити модуль</Button>
-                  </CardContent>
-                </Card>
-              </Link>
-            )}
-
-            {/* Зарплати */}
-            {hasPermission('salaries', 'read') && (
-              <Link href="/salaries">
-                <Card className="bg-white border border-gray-200 shadow-md hover:shadow-lg hover:border-slate-300 transition-all duration-300 cursor-pointer h-full group">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-2xl">
-                      <span className="text-3xl">💰</span>
-                      Зарплати
-                    </CardTitle>
-                    <CardDescription>
-                      Зарплати співробітників та бонуси
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button className="w-full bg-slate-800 hover:bg-slate-900 text-white transition-all duration-300">Відкрити модуль</Button>
-                  </CardContent>
-                </Card>
-              </Link>
-            )}
-
-            {/* Витрати */}
-            {hasPermission('expenses', 'read') && (
-              <Link href="/expenses">
-                <Card className="bg-white border border-gray-200 shadow-md hover:shadow-lg hover:border-slate-300 transition-all duration-300 cursor-pointer h-full group">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-2xl">
-                      <span className="text-3xl">📊</span>
-                      Витрати філій
-                    </CardTitle>
-                    <CardDescription>
-                      Витрати на оренду, рекламу, канцтовари
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button className="w-full bg-slate-800 hover:bg-slate-900 text-white transition-all duration-300">Відкрити модуль</Button>
-                  </CardContent>
-                </Card>
-              </Link>
-            )}
-
-            {/* Користувачі */}
-            {hasPermission('users', 'read') && (
-              <Link href="/users">
-                <Card className="bg-white border border-gray-200 shadow-md hover:shadow-lg hover:border-slate-300 transition-all duration-300 cursor-pointer h-full group">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-2xl">
-                      <span className="text-3xl">👤</span>
-                      Користувачі
-                    </CardTitle>
-                    <CardDescription>
-                      Управління користувачами системи
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button className="w-full bg-slate-800 hover:bg-slate-900 text-white transition-all duration-300">Відкрити модуль</Button>
-                  </CardContent>
-                </Card>
-              </Link>
-            )}
-
-            {/* Видалені записи (тільки для ADMIN) */}
-            {user?.role === 'ADMIN' && (
-              <Link href="/deleted-records">
-                <Card className="bg-white border border-red-200 shadow-md hover:shadow-lg hover:border-red-300 transition-all duration-300 cursor-pointer h-full group">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-3 text-2xl">
-                      <span className="text-4xl group-hover:scale-110 transition-transform">🗑️</span>
-                      <span className="text-slate-800">Видалені записи</span>
-                    </CardTitle>
-                    <CardDescription className="text-gray-600">
-                      Перегляд та відновлення видалених кандидатів
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button className="w-full bg-red-600 hover:bg-red-700 text-white transition-all duration-300">
-                      Відкрити модуль
-                    </Button>
-                  </CardContent>
-                </Card>
-              </Link>
-            )}
-          </div>
+          {/* Кнопка розгортання чату */}
+          {chatCollapsed && (
+            <div className="w-12 border-l border-gray-200 bg-gray-50 flex items-center justify-center">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setChatCollapsed(false)}
+                className="p-2"
+              >
+                <ChevronUp className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
         </div>
-      </div>
+      </CRMLayout>
     </ProtectedRoute>
   )
 }
-

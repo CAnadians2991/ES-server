@@ -34,6 +34,53 @@ export const PACKAGE_PRICES = { 'Базовий': 999, 'Стандарт': 1499,
 export const APPLICATION_STATUSES = ['Поданий', 'Підтверджено', 'Відхилено', 'В обробці'] as const
 export const WORK_TYPES = ['Логістика', 'Виробництво', 'Готель', 'Будівництво', 'Склад'] as const
 
+// Нові константи для детальної картки клієнта
+export const DEAL_STAGES = [
+  'Створена',
+  'Внесення даних',
+  'Готово для адміна',
+  'Схвалено адміном',
+  'Подано партнеру',
+  'Прийнято партнером',
+  'Відхилено партнером',
+  'Завершена'
+] as const
+
+export const DEAL_STATUSES = [
+  'Активна',
+  'Завершена',
+  'Скасована',
+  'Призупинена'
+] as const
+
+// Прибрано ролі - просто групування кандидатів
+
+export const TRANSPORT_TYPES = [
+  'Самостійно',
+  'Організовано',
+  'Змішано'
+] as const
+
+export const ACTIVITY_TYPES = [
+  'comment',
+  'call',
+  'task',
+  'stage_change',
+  'direction_change',
+  'deal_created',
+  'document_uploaded',
+  'payment_received'
+] as const
+
+export const DOCUMENT_TYPES = [
+  'receipt',
+  'invoice',
+  'contract',
+  'passport',
+  'visa',
+  'other'
+] as const
+
 // Нові константи для розширених полів
 export const EDUCATION_LEVELS = [
   'Середня',
@@ -109,6 +156,17 @@ export interface Candidate {
   languageSkills?: string | null
   familyStatus?: string | null
   children?: number | null
+  
+  // Поля для детальної картки
+  dealStage?: string
+  dealAmount?: number
+  dealCurrency?: string
+  workCity?: string | null
+  workAddress?: string | null
+  transportType?: string | null
+  contacts?: string | null
+  completionDate?: Date | string | null
+  dealStatus?: string
   
   createdAt?: Date
   updatedAt?: Date
@@ -374,4 +432,159 @@ export interface MonthlySalary {
   indicators: number
   createdAt: Date
   updatedAt: Date
+}
+
+// Нові інтерфейси для детальної картки клієнта
+export interface Activity {
+  id: number
+  candidateId: number
+  type: string
+  title: string
+  description?: string | null
+  userId?: number | null
+  userName?: string | null
+  metadata?: string | null
+  isPinned: boolean
+  createdAt: Date
+}
+
+export interface Document {
+  id: number
+  candidateId: number
+  type: string
+  title: string
+  fileName: string
+  filePath: string
+  fileSize?: number | null
+  mimeType?: string | null
+  description?: string | null
+  uploadedBy?: number | null
+  uploadedAt: Date
+}
+
+export interface CandidateDetail extends Candidate {
+  activities: Activity[]
+  documents: Document[]
+}
+
+// Типи для контактів
+export interface Contact {
+  id: number
+  firstName: string
+  lastName: string
+  phone: string
+  age: number
+  candidateCountry?: string
+  vacancyCountry?: string
+  projectName?: string
+  candidateStatus?: string
+  notes?: string
+  
+  // Метадані
+  managerId: number
+  managerName: string
+  branch: string
+  
+  // Передача відповідальності
+  originalManagerId?: number
+  originalManagerName?: string
+  transferredAt?: Date
+  transferredBy?: number
+  transferredByName?: string
+  transferReason?: string
+  
+  createdAt: Date
+  updatedAt: Date
+}
+
+// Типи для запитів на передачу контакту
+export interface ContactTransferRequest {
+  id: number
+  contactId: number
+  fromManagerId: number
+  toManagerId: number
+  fromManagerName: string
+  toManagerName: string
+  reason?: string
+  status: 'Pending' | 'Approved' | 'Rejected'
+  approvedBy?: number
+  approvedByName?: string
+  approvedAt?: Date
+  adminNotes?: string
+  createdAt: Date
+  updatedAt: Date
+  contact?: Contact
+}
+
+// Нові інтерфейси для угод
+export interface Deal {
+  id: number
+  title: string
+  description?: string | null
+  managerId: number
+  managerName: string
+  branch: string
+  vacancyCountry: string
+  projectName: string
+  partnerNumber?: string | null
+  workCity?: string | null
+  workAddress?: string | null
+  arrivalDate?: Date | string | null
+  transportType?: string | null
+  contacts?: string | null
+  dealStage: string
+  dealStatus: string
+  totalAmount: number
+  dealCurrency: string
+  paymentStatus?: string | null
+  recipientType?: string | null
+  isReadyForAdmin: boolean
+  adminApproved: boolean
+  submittedToPartner: boolean
+  createdAt: Date
+  updatedAt: Date
+  candidates?: DealContact[]
+  activities?: DealActivity[]
+  documents?: DealDocument[]
+}
+
+export interface DealContact {
+  id: number
+  dealId: number
+  contactId: number
+  createdAt: Date
+  contact?: Contact
+}
+
+export interface DealActivity {
+  id: number
+  dealId: number
+  type: string
+  title: string
+  description?: string | null
+  userId?: number | null
+  userName?: string | null
+  metadata?: string | null
+  isPinned: boolean
+  createdAt: Date
+}
+
+export interface DealDocument {
+  id: number
+  dealId: number
+  type: string
+  title: string
+  fileName: string
+  filePath: string
+  fileSize?: number | null
+  mimeType?: string | null
+  description?: string | null
+  uploadedBy?: number | null
+  uploadedAt: Date
+}
+
+export interface DealDetail extends Deal {
+  contacts: DealContact[]
+  activities: DealActivity[]
+  documents: DealDocument[]
 }
