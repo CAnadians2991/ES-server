@@ -45,6 +45,11 @@ export function CandidatesTableExcel({ candidates: initialCandidates, onAddNewRo
   const [resizingColumn, setResizingColumn] = useState<string | null>(null)
   const [draggedRow, setDraggedRow] = useState<number | null>(null)
   const [dropTarget, setDropTarget] = useState<number | null>(null)
+  const [dragPreview, setDragPreview] = useState<{ x: number; y: number } | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [mouseDragStart, setMouseDragStart] = useState<{ x: number; y: number; candidateId: number } | null>(null)
+  const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null)
+  const [insertPosition, setInsertPosition] = useState<'above' | 'below' | null>(null)
   const [selectedRow, setSelectedRow] = useState<number | null>(null)
   const [historyModalOpen, setHistoryModalOpen] = useState(false)
   const [historyModalCandidateId, setHistoryModalCandidateId] = useState<number | null>(null)
@@ -383,39 +388,247 @@ const renderCell = (candidate: Candidate, field: string, editingCell: { id: numb
   }
 
   function handleColumnResize(columnKey: string, startX: number, startWidth: number) {
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleResizeMouseMove = (e: MouseEvent) => {
       const diff = e.clientX - startX
       const newWidth = Math.max(50, startWidth + diff)
       setColumnWidths(prev => ({ ...prev, [columnKey]: newWidth }))
     }
 
-    const handleMouseUp = () => {
+    const handleResizeMouseUp = () => {
       setResizingColumn(null)
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
+      document.removeEventListener('mousemove', handleResizeMouseMove)
+      document.removeEventListener('mouseup', handleResizeMouseUp)
     }
 
     setResizingColumn(columnKey)
-    document.addEventListener('mousemove', handleMouseMove)
-    document.addEventListener('mouseup', handleMouseUp)
+    document.addEventListener('mousemove', handleResizeMouseMove)
+    document.addEventListener('mouseup', handleResizeMouseUp)
   }
 
-  function handleDragStart(candidateId: number) {
-    setDraggedRow(candidateId)
+  // Excel-style drag & drop handlers
+  function handleMouseDown(candidateId: number, e: React.MouseEvent) {
+    if (e.button !== 0) return // Тільки ліва кнопка миші
+    
+    console.log('=== MOUSE DOWN START ===')
+    console.log('Mouse down on candidate:', candidateId)
+    console.log('Current state before clear:', { mouseDragStart, isDragging, draggedRow })
+    
+    // Забороняємо виділення тексту
+    e.preventDefault()
+    
+    const rect = (e.target as HTMLElement).getBoundingClientRect()
+    const offsetX = e.clientX - rect.left
+    const offsetY = e.clientY - rect.top
+    
+    console.log('Setting new drag state:', { candidateId, offsetX, offsetY })
+    
+    // Очищуємо попередній стан ТІЛЬКИ після того як зберегли нові дані
+    setMouseDragStart({
+      x: e.clientX,
+      y: e.clientY,
+      candidateId
+    })
+    
+    setDragOffset({ x: offsetX, y: offsetY })
+    
+    // Очищуємо інші стани
+    setDraggedRow(null)
+    setDropTarget(null)
+    setDragPreview(null)
+    setIsDragging(false)
+    setInsertPosition(null)
+    
+    // Додаємо глобальні обробники
+    document.addEventListener('mousemove', handleMouseMove, { passive: false })
+    document.addEventListener('mouseup', handleMouseUp, { passive: false })
+    
+    // Забороняємо виділення тексту глобально
+    document.body.style.userSelect = 'none'
+    document.body.style.webkitUserSelect = 'none'
+    
+    console.log('=== MOUSE DOWN END ===')
+  }
+
+  function handleMouseMove(e: MouseEvent) {
+    if (!mouseDragStart || !dragOffset) {
+      console.log('Mouse move: no drag state', { mouseDragStart: !!mouseDragStart, dragOffset: !!dragOffset })
+      return
+    }
+    
+    // Забороняємо виділення тексту
+    e.preventDefault()
+    
+    const deltaX = Math.abs(e.clientX - mouseDragStart.x)
+    const deltaY = Math.abs(e.clientY - mouseDragStart.y)
+    
+    console.log('Mouse move:', { deltaX, deltaY, threshold: 5, isDragging })
+    
+    // Якщо миша перемістилася більше ніж на 5 пікселів, починаємо drag
+    if (deltaX > 5 || deltaY > 5) {
+      if (!isDragging) {
+        console.log('=== STARTING DRAG ===')
+        console.log('Starting Excel-style drag for candidate:', mouseDragStart.candidateId)
+        setDraggedRow(mouseDragStart.candidateId)
+        setIsDragging(true)
+        console.log('Drag state set:', { draggedRow: mouseDragStart.candidateId, isDragging: true })
+      }
+      
+      // Оновлюємо позицію preview
+      setDragPreview({ x: e.clientX, y: e.clientY })
+      
+      // Знаходимо найближчий рядок для вставки
+      const tableElement = tableRef.current
+      if (tableElement) {
+        const rows = Array.from(tableElement.querySelectorAll('tr[data-candidate-id]'))
+        let closestRow = null
+        let closestDistance = Infinity
+        let insertPos: 'above' | 'below' = 'below'
+        
+        for (const row of rows) {
+          const rect = row.getBoundingClientRect()
+          const candidateId = parseInt(row.getAttribute('data-candidate-id') || '0')
+          
+          if (candidateId === mouseDragStart.candidateId) continue
+          
+          // Перевіряємо чи курсор над верхньою половиною рядка
+          const isAbove = e.clientY < rect.top + rect.height / 2
+          const distance = Math.abs(e.clientY - (isAbove ? rect.top : rect.bottom))
+          
+          if (distance < closestDistance) {
+            closestDistance = distance
+            closestRow = candidateId
+            insertPos = isAbove ? 'above' : 'below'
+          }
+        }
+        
+        if (closestRow && closestRow !== dropTarget) {
+          console.log('Setting drop target:', { closestRow, insertPos, distance: closestDistance })
+          setDropTarget(closestRow)
+          setInsertPosition(insertPos)
+        }
+      }
+    }
+  }
+
+  function handleMouseUp(e: MouseEvent) {
+    console.log('=== MOUSE UP START ===')
+    console.log('Mouse up event triggered')
+    
+    if (!mouseDragStart) {
+      console.log('No mouseDragStart, removing listener')
+      document.removeEventListener('mouseup', handleMouseUp)
+      return
+    }
+    
+    // Забороняємо виділення тексту
+    e.preventDefault()
+    
+    console.log('Mouse up, Excel-style drop check')
+    console.log('Current state:', { isDragging, dropTarget, insertPosition, draggedRow })
+    
+    // Якщо є активний drag і drop target
+    if (isDragging && dropTarget && insertPosition && draggedRow) {
+      console.log('=== PERFORMING DROP ===')
+      console.log('Excel-style drop:', { draggedRow, dropTarget, insertPosition })
+      
+      const draggedIndex = candidates.findIndex(c => c.id === draggedRow)
+      const targetIndex = candidates.findIndex(c => c.id === dropTarget)
+      
+      console.log('Initial indices:', { draggedIndex, targetIndex })
+      
+      if (draggedIndex !== -1 && targetIndex !== -1) {
+        let newIndex = targetIndex
+        
+        // Враховуємо позицію вставки
+        if (insertPosition === 'below') {
+          newIndex = targetIndex + 1
+        }
+        
+        // Якщо переміщуємо вниз, зменшуємо індекс на 1
+        if (draggedIndex < newIndex) {
+          newIndex -= 1
+        }
+        
+        console.log('Final indices:', { draggedIndex, targetIndex, newIndex })
+        
+        // Перевіряємо чи потрібно переміщувати
+        if (draggedIndex !== newIndex) {
+          console.log('=== PERFORMING REORDER ===')
+          
+          // Миттєве оновлення UI через Zustand store
+          const newCandidates = [...candidates]
+          const [removed] = newCandidates.splice(draggedIndex, 1)
+          newCandidates.splice(newIndex, 0, removed)
+          setCandidates(newCandidates)
+          
+          // Оновлюємо глобальний стан через Zustand
+          reorderCandidates(draggedRow, dropTarget, insertPosition)
+          
+          console.log('Reorder completed successfully')
+        } else {
+          console.log('No reorder needed - same position')
+        }
+      } else {
+        console.log('Invalid indices:', { draggedIndex, targetIndex })
+      }
+    } else {
+      console.log('Drop conditions not met:', { isDragging, dropTarget, insertPosition, draggedRow })
+    }
+    
+    console.log('=== CLEARING DRAG STATE ===')
+    // Очищуємо стани ТІЛЬКИ після обробки drop
+    clearDragState()
+    console.log('=== MOUSE UP END ===')
   }
 
   function handleDragOver(e: React.DragEvent, candidateId: number) {
+    console.log('Drag over event triggered for candidate:', candidateId)
     e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    
     if (draggedRow !== candidateId) {
+      console.log('Drag over candidate:', candidateId, 'dragged:', draggedRow)
       setDropTarget(candidateId)
+      
+      // Оновлюємо позицію preview (опціонально)
+      if (isDragging) {
+        setDragPreview({ x: e.clientX, y: e.clientY })
+      }
     }
+  }
+
+  // Функція для повного очищення стану drag & drop
+  function clearDragState() {
+    console.log('=== CLEARING DRAG STATE ===')
+    console.log('Clearing all drag state')
+    console.log('State before clear:', { mouseDragStart, draggedRow, dropTarget, insertPosition, isDragging })
+    console.log('Stack trace:', new Error().stack)
+    setMouseDragStart(null)
+    setDraggedRow(null)
+    setDropTarget(null)
+    setDragPreview(null)
+    setIsDragging(false)
+    setDragOffset(null)
+    setInsertPosition(null)
+    document.body.style.userSelect = ''
+    document.body.style.webkitUserSelect = ''
+    document.removeEventListener('mousemove', handleMouseMove)
+    document.removeEventListener('mouseup', handleMouseUp)
+    console.log('=== DRAG STATE CLEARED ===')
+  }
+
+  function handleDragEnd() {
+    console.log('Drag ended')
+    clearDragState()
   }
 
   // Debounced reorder function - оптимізовано для слабких комп'ютерів
   const debouncedReorder = useCallback(
     debounce(async (draggedId: number, targetId: number) => {
       try {
+        console.log('Saving reorder to database:', { draggedId, targetId })
         await api.candidates.reorder(draggedId, targetId)
+        console.log('Reorder saved successfully')
       } catch (error) {
         console.error('Reorder error:', error)
         toast({
@@ -424,25 +637,38 @@ const renderCell = (candidate: Candidate, field: string, editingCell: { id: numb
           variant: 'destructive',
         })
       }
-    }, 1000), // Зменшуємо до 1 секунди для кращого відчуття
+    }, 800), // Оптимізовано для кращої продуктивності
     [toast, api.candidates.reorder]
   )
 
-  const handleDrop = useCallback((targetId: number) => {
-    if (draggedRow === null || draggedRow === targetId) {
-      setDraggedRow(null)
-      setDropTarget(null)
+  const handleDrop = useCallback((targetId: number, e: MouseEvent | React.DragEvent, draggedId?: number) => {
+    console.log('Drop triggered:', { draggedRow, targetId, eventType: 'dataTransfer' in e ? 'drag' : 'mouse', draggedId })
+    
+    // Для mouse events використовуємо переданий draggedId, для drag events читаємо з dataTransfer
+    let actualDraggedId = draggedId || draggedRow
+    
+    if (!actualDraggedId && 'dataTransfer' in e && e.dataTransfer) {
+      const draggedIdFromData = e.dataTransfer.getData('text/plain')
+      actualDraggedId = draggedIdFromData ? parseInt(draggedIdFromData) : null
+    }
+    
+    console.log('Actual dragged ID:', actualDraggedId)
+    
+    if (actualDraggedId === null || actualDraggedId === targetId) {
+      handleDragEnd()
       return
     }
 
-    const draggedIndex = candidates.findIndex(c => c.id === draggedRow)
+    const draggedIndex = candidates.findIndex(c => c.id === actualDraggedId)
     const targetIndex = candidates.findIndex(c => c.id === targetId)
 
     if (draggedIndex === -1 || targetIndex === -1) {
-      setDraggedRow(null)
-      setDropTarget(null)
+      console.log('Invalid indices:', { draggedIndex, targetIndex })
+      handleDragEnd()
       return
     }
+
+    console.log('Reordering candidates:', { draggedIndex, targetIndex })
 
     // Миттєве оновлення UI без жодних затримок
     const newCandidates = [...candidates]
@@ -450,19 +676,15 @@ const renderCell = (candidate: Candidate, field: string, editingCell: { id: numb
     newCandidates.splice(targetIndex, 0, removed)
     setCandidates(newCandidates)
 
-    // Скидаємо стани drag & drop
-    setDraggedRow(null)
-    setDropTarget(null)
-
-    // Оновлюємо глобальний стан
-    updateCandidate(draggedRow, { sortOrder: targetIndex } as any)
+    // Debounced API call для збереження в БД
+    debouncedReorder(actualDraggedId, targetId)
     
-    // Debounced API call
-    debouncedReorder(draggedRow, targetId)
-  }, [draggedRow, candidates, setCandidates, updateCandidate, debouncedReorder])
+    // Скидаємо стани drag & drop
+    handleDragEnd()
+  }, [draggedRow, candidates, debouncedReorder])
 
   function handleRowClick(candidateId: number, e: React.MouseEvent) {
-    if ((e.target as HTMLElement).closest('input, select, button')) return
+    if ((e.target as HTMLElement).closest('input, select, button, .cursor-move')) return
     setSelectedRow(candidateId)
   }
 
@@ -513,6 +735,16 @@ const renderCell = (candidate: Candidate, field: string, editingCell: { id: numb
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [selectedRow, candidates, editingCell, handleCopyRow])
 
+  // Cleanup mouse events on unmount
+  useEffect(() => {
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+      // Відновлюємо виділення тексту при unmount
+      document.body.style.userSelect = ''
+      document.body.style.webkitUserSelect = ''
+    }
+  }, [])
 
   function getStatusClass(status: string) {
     const statusMap: Record<string, string> = {
@@ -562,26 +794,29 @@ const renderCell = (candidate: Candidate, field: string, editingCell: { id: numb
             {candidates.map((candidate, idx) => (
               <tr
                 key={candidate.id}
-                draggable={canWrite}
-                onDragStart={() => handleDragStart(candidate.id)}
+                data-candidate-id={candidate.id}
                 onDragOver={(e) => handleDragOver(e, candidate.id)}
-                onDrop={() => handleDrop(candidate.id)}
-                onDragEnd={() => {
-                  setDraggedRow(null)
-                  setDropTarget(null)
+                onDrop={(e) => {
+                  e.preventDefault()
+                  handleDrop(candidate.id, e, draggedRow ?? undefined)
                 }}
                 onClick={(e) => handleRowClick(candidate.id, e)}
                 className={`
                   border-b hover:bg-gray-50 transition-colors cursor-pointer
                   ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
                   ${draggedRow === candidate.id ? 'opacity-50' : ''}
-                  ${dropTarget === candidate.id ? 'border-t-4 border-blue-500' : ''}
+                  ${dropTarget === candidate.id && insertPosition === 'above' ? 'border-t-2 border-blue-500' : ''}
+                  ${dropTarget === candidate.id && insertPosition === 'below' ? 'border-b-2 border-blue-500' : ''}
                   ${selectedRow === candidate.id ? 'bg-blue-50' : ''}
                 `}
                 style={{ height: '20px' }}
               >
                 {canWrite && (
-                  <td className="px-1.5 py-0 cursor-move hover:bg-gray-200">
+                  <td 
+                    className="px-1.5 py-0 cursor-move hover:bg-gray-200 select-none"
+                    onMouseDown={(e) => handleMouseDown(candidate.id, e)}
+                    style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+                  >
                     <GripVertical className="h-3 w-3 text-gray-400" />
                   </td>
                 )}
@@ -594,6 +829,11 @@ const renderCell = (candidate: Candidate, field: string, editingCell: { id: numb
                       className={`px-1.5 py-0 border-r overflow-hidden ${col.editable && canWrite ? 'cursor-pointer hover:bg-blue-50' : ''} ${field === 'id' ? 'text-gray-600 font-mono' : ''} ${field === 'paymentAmount' ? 'text-right' : ''}`}
                       style={{ width: columnWidths[col.key] || col.width, maxHeight: '20px' }}
                       onClick={() => col.editable && handleCellClick(candidate, field)}
+                      onDrop={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        handleDrop(candidate.id, e, draggedRow ?? undefined)
+                      }}
                     >
                       {field === 'id' ? (
                         <span className="truncate block">{formatCandidateId(candidate.id)}</span>
@@ -610,7 +850,14 @@ const renderCell = (candidate: Candidate, field: string, editingCell: { id: numb
                   )
                 })}
                 {canDelete && (
-                  <td className="px-1.5 py-0 text-center">
+                  <td 
+                    className="px-1.5 py-0 text-center"
+                    onDrop={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      handleDrop(candidate.id, e, draggedRow ?? undefined)
+                    }}
+                  >
                     <div className="flex items-center justify-center gap-1">
                       {isAdmin && (
                         <Button
@@ -657,6 +904,20 @@ const renderCell = (candidate: Candidate, field: string, editingCell: { id: numb
           </tbody>
         </table>
       </div>
+
+      {/* Excel-style індикатор місця вставки */}
+      {isDragging && dragPreview && dragOffset && (
+        <div
+          className="fixed pointer-events-none z-50 bg-blue-500 text-white px-2 py-1 rounded text-xs shadow-lg"
+          style={{
+            left: dragPreview.x - dragOffset.x,
+            top: dragPreview.y - dragOffset.y,
+            transform: 'translateX(-50%)',
+          }}
+        >
+          {insertPosition === 'above' ? 'Вставити вище' : insertPosition === 'below' ? 'Вставити нижче' : 'Перемістити'}
+        </div>
+      )}
 
       <CandidateHistoryModal
         candidateId={historyModalCandidateId}

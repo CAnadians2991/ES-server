@@ -30,7 +30,7 @@ interface CandidatesStore {
   addCandidate: (candidate: Candidate) => void
   updateCandidate: (id: number, candidate: Partial<Candidate>) => void
   deleteCandidate: (id: number) => void
-  reorderCandidates: (draggedId: number, targetId: number) => void
+  reorderCandidates: (draggedId: number, targetId: number, insertPosition?: 'above' | 'below') => void
 }
 
 const currentDate = new Date()
@@ -67,7 +67,7 @@ export const useCandidatesStore = create<CandidatesStore>((set) => ({
       candidates: state.candidates.filter((c) => c.id !== id),
     })),
 
-  reorderCandidates: (draggedId, targetId) =>
+  reorderCandidates: (draggedId, targetId, insertPosition = 'below') =>
     set((state) => {
       const candidates = [...state.candidates]
       const draggedIndex = candidates.findIndex(c => c.id === draggedId)
@@ -75,8 +75,20 @@ export const useCandidatesStore = create<CandidatesStore>((set) => ({
       
       if (draggedIndex === -1 || targetIndex === -1) return state
       
+      let newIndex = targetIndex
+      
+      // Враховуємо позицію вставки
+      if (insertPosition === 'below') {
+        newIndex = targetIndex + 1
+      }
+      
+      // Якщо переміщуємо вниз, зменшуємо індекс на 1
+      if (draggedIndex < newIndex) {
+        newIndex -= 1
+      }
+      
       const [removed] = candidates.splice(draggedIndex, 1)
-      candidates.splice(targetIndex, 0, removed)
+      candidates.splice(newIndex, 0, removed)
       
       return { candidates }
     }),

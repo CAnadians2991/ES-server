@@ -8,45 +8,42 @@ datasource db {
 }
 
 model Candidate {
-  id              Int       @id @default(autoincrement())
-  branch          String    @default("ЦО")
-  responsible     String    @default("")
-  firstName       String    @default("")
-  lastName        String    @default("")
-  phone           String    @default("")
-  age             Int?      @default(18)
-  candidateCountry String   @default("Україна")
-  vacancyCountry  String    @default("Польща")
-  projectName     String    @default("")
-  partnerNumber   String    @default("")
-  arrivalDate     DateTime?
-  candidateStatus String    @default("Зареєстровано")
-  paymentAmount   Float     @default(0)
-  paymentStatus   String?
-  recipientType   String?
-  comment         String?
-  sortOrder       Int       @default(0)
-  isDeleted       Boolean   @default(false)
-  deletedAt       DateTime?
-  deletedBy       Int?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
-  // Нові поля
-  applicationNumber String? @unique
-  email            String?
-  passportNumber   String?
-  passportExpiry   DateTime?
-  education        String?
-  workExperience   String?
-  languageSkills   String?
-  familyStatus     String?
-  children         Int?
-  
-  payments        Payment[]
-  applications    Application[]
-  auditLogs       AuditLog[]
-  
+  id                Int           @id @default(autoincrement())
+  branch            String        @default("ЦО")
+  responsible       String        @default("")
+  firstName         String        @default("")
+  lastName          String        @default("")
+  phone             String        @default("")
+  age               Int?          @default(18)
+  candidateCountry  String        @default("Україна")
+  vacancyCountry    String        @default("Польща")
+  projectName       String        @default("")
+  partnerNumber     String        @default("")
+  arrivalDate       DateTime?
+  candidateStatus   String        @default("Зареєстровано")
+  paymentAmount     Float         @default(0)
+  paymentStatus     String?
+  recipientType     String?
+  comment           String?
+  sortOrder         Int           @default(0)
+  isDeleted         Boolean       @default(false)
+  deletedAt         DateTime?
+  deletedBy         Int?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  applicationNumber String?       @unique
+  email             String?
+  passportNumber    String?
+  passportExpiry    DateTime?
+  education         String?
+  workExperience    String?
+  languageSkills    String?
+  familyStatus      String?
+  children          Int?
+  applications      Application[]
+  auditLogs         AuditLog[]
+  payments          Payment[]
+
   @@index([branch])
   @@index([vacancyCountry])
   @@index([candidateStatus])
@@ -56,21 +53,21 @@ model Candidate {
 }
 
 model Payment {
-  id                Int       @id @default(autoincrement())
-  candidateId       Int
-  candidate         Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-  amount            Float
-  paymentDate       DateTime
-  paymentStatus     String
-  expectedDate      DateTime?
-  recipientType     String
-  bankAccount       String?
-  paymentMethod     String?
-  referenceNumber   String?
-  comment           String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  
+  id              Int       @id @default(autoincrement())
+  candidateId     Int
+  amount          Float
+  paymentDate     DateTime
+  paymentStatus   String
+  expectedDate    DateTime?
+  recipientType   String
+  bankAccount     String?
+  paymentMethod   String?
+  referenceNumber String?
+  comment         String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  candidate       Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
   @@index([candidateId])
   @@index([paymentStatus])
   @@index([paymentDate])
@@ -78,64 +75,61 @@ model Payment {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  username  String   @unique
+  id        Int             @id @default(autoincrement())
+  username  String          @unique
   password  String
-  role      String   @default("MANAGER")
+  role      String          @default("MANAGER")
   fullName  String
-  isActive  Boolean  @default(true)
-  branch    String?  
-  salary    Float    @default(0)
+  isActive  Boolean         @default(true)
+  branch    String?
+  salary    Float           @default(0)
   email     String?
   phone     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
   salaries  MonthlySalary[]
-  
+
   @@index([role])
   @@index([isActive])
   @@index([branch])
 }
 
 model Vacancy {
-  id              Int       @id @default(autoincrement())
-  country         String
-  projectName     String
-  partnerName     String
-  salary          String
-  workType        String
-  requirements    String?
-  isPriority      Boolean   @default(false)
-  isActive        Boolean   @default(true)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
-  applications    Application[]
-  
+  id           Int           @id @default(autoincrement())
+  country      String
+  projectName  String
+  partnerName  String
+  salary       String
+  workType     String
+  requirements String?
+  isPriority   Boolean       @default(false)
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  applications Application[]
+
   @@index([country])
   @@index([isActive])
 }
 
 model Application {
-  id              Int       @id @default(autoincrement())
-  candidateId     Int
-  vacancyId       Int
-  managerId       Int
-  packageType     String
-  packagePrice    Float     @default(0)
-  isFree          Boolean   @default(false)
-  status          String    @default("Поданий")
-  arrivedStatus   String?
-  workedStatus    String?
-  partnerPayment  Float?
-  paymentDays     Int?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
-  candidate       Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
-  vacancy         Vacancy   @relation(fields: [vacancyId], references: [id])
-  
+  id             Int       @id @default(autoincrement())
+  candidateId    Int
+  vacancyId      Int
+  managerId      Int
+  packageType    String
+  packagePrice   Float     @default(0)
+  isFree         Boolean   @default(false)
+  status         String    @default("Поданий")
+  arrivedStatus  String?
+  workedStatus   String?
+  partnerPayment Float?
+  paymentDays    Int?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  candidate      Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  vacancy        Vacancy   @relation(fields: [vacancyId], references: [id])
+
   @@index([candidateId])
   @@index([vacancyId])
   @@index([managerId])
@@ -144,79 +138,76 @@ model Application {
 }
 
 model VisaSale {
-  id              Int       @id @default(autoincrement())
-  candidateId     Int
-  managerId       Int
-  price           Float     @default(6500)
-  commission      Float     @default(600)
-  saleDate        DateTime  @default(now())
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
+  id          Int      @id @default(autoincrement())
+  candidateId Int
+  managerId   Int
+  price       Float    @default(6500)
+  commission  Float    @default(600)
+  saleDate    DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
   @@index([managerId])
   @@index([saleDate])
 }
 
 model BranchExpense {
-  id              Int       @id @default(autoincrement())
-  branch          String
-  month           Int
-  year            Int
-  rent            Float     @default(0)
-  utilities       Float     @default(0)
-  office          Float     @default(0)
-  advertising     Float     @default(0)
-  other           Float     @default(0)
-  description     String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
+  id          Int      @id @default(autoincrement())
+  branch      String
+  month       Int
+  year        Int
+  rent        Float    @default(0)
+  utilities   Float    @default(0)
+  office      Float    @default(0)
+  advertising Float    @default(0)
+  other       Float    @default(0)
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
   @@unique([branch, month, year])
   @@index([branch])
   @@index([year, month])
 }
 
 model MonthlySalary {
-  id              Int       @id @default(autoincrement())
-  userId          Int
-  month           Int
-  year            Int
-  baseSalary      Float     @default(0)
-  bonus           Float     @default(0)
-  visaBonus       Float     @default(0)
-  freeBonus       Float     @default(0)
-  total           Float     @default(0)
-  indicators      Int       @default(0)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  month      Int
+  year       Int
+  baseSalary Float    @default(0)
+  bonus      Float    @default(0)
+  visaBonus  Float    @default(0)
+  freeBonus  Float    @default(0)
+  total      Float    @default(0)
+  indicators Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([userId, month, year])
   @@index([userId])
   @@index([year, month])
 }
 
 model AuditLog {
-  id              Int       @id @default(autoincrement())
-  entityType      String
-  entityId        Int
-  action          String
-  userId          Int?
-  userName        String?
-  oldData         String?
-  newData         String?
-  fieldName       String?
-  oldValue        String?
-  newValue        String?
-  ipAddress       String?
-  createdAt       DateTime  @default(now())
-  
-  candidate       Candidate? @relation(fields: [entityId], references: [id], onDelete: Cascade)
-  
+  id         Int       @id @default(autoincrement())
+  entityType String
+  entityId   Int
+  action     String
+  userId     Int?
+  userName   String?
+  oldData    String?
+  newData    String?
+  fieldName  String?
+  oldValue   String?
+  newValue   String?
+  ipAddress  String?
+  createdAt  DateTime  @default(now())
+  candidate  Candidate @relation(fields: [entityId], references: [id], onDelete: Cascade)
+
   @@index([entityType, entityId])
   @@index([userId])
   @@index([createdAt])
   @@index([action])
 }
-
