@@ -117,7 +117,7 @@ export function CandidateEditModal({ candidate, isOpen, onClose, onSave }: Candi
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="firstName">Ім'я</Label>
+                      <Label htmlFor="firstName">Ім&apos;я</Label>
                       <Input
                         id="firstName"
                         value={formData.firstName || ''}
@@ -559,7 +559,7 @@ export function CandidateEditModal({ candidate, isOpen, onClose, onSave }: Candi
                       <Input
                         id="completionDate"
                         type="date"
-                        value={formData.completionDate || ''}
+                        value={formData.completionDate instanceof Date ? formData.completionDate.toISOString().split('T')[0] : formData.completionDate || ''}
                         onChange={(e) => setFormData(prev => ({ ...prev, completionDate: e.target.value }))}
                       />
                     </div>

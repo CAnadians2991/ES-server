@@ -132,7 +132,7 @@ export default function HomePage() {
                 <ul className="space-y-3">
                   <li className="flex items-center text-sm text-gray-700">
                     <ArrowRight className="h-4 w-4 text-blue-500 mr-2 flex-shrink-0" />
-                    <span className="flex-1">Менеджер Ігор Литвин створив новий контакт "Олена Коваль"</span>
+                    <span className="flex-1">Менеджер Ігор Литвин створив новий контакт &quot;Олена Коваль&quot;</span>
                     <span className="text-xs text-gray-500 ml-2 flex-shrink-0">5 хв тому</span>
                   </li>
                   <li className="flex items-center text-sm text-gray-700">
@@ -142,7 +142,7 @@ export default function HomePage() {
                   </li>
                   <li className="flex items-center text-sm text-gray-700">
                     <ArrowRight className="h-4 w-4 text-blue-500 mr-2 flex-shrink-0" />
-                    <span className="flex-1">Менеджер Світлана Рянді оновила статус кандидата "Петро Іванов"</span>
+                    <span className="flex-1">Менеджер Світлана Рянді оновила статус кандидата &quot;Петро Іванов&quot;</span>
                     <span className="text-xs text-gray-500 ml-2 flex-shrink-0">3 години тому</span>
                   </li>
                 </ul>

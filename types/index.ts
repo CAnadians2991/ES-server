@@ -583,7 +583,7 @@ export interface DealDocument {
   uploadedAt: Date
 }
 
-export interface DealDetail extends Deal {
+export interface DealDetail extends Omit<Deal, 'contacts'> {
   contacts: DealContact[]
   activities: DealActivity[]
   documents: DealDocument[]

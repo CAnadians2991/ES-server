@@ -147,7 +147,7 @@ export default function ContactDetailPage() {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Основна інформація</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Ім'я</label>
+                  <label className="text-sm font-medium text-gray-700">Ім&apos;я</label>
                   <p className="text-sm text-gray-900">{contact.firstName}</p>
                 </div>
                 <div>

@@ -88,35 +88,6 @@ export default function ContactViewSidebar({ isOpen, onClose, contact, onEdit, c
       ]
     },
     {
-      id: 'contact',
-      title: 'Контакти',
-      icon: Phone,
-      emoji: '📞',
-      color: 'from-emerald-400 to-teal-500',
-      fields: [
-        { id: 'email', label: 'Email', value: contact.email },
-        { id: 'viber', label: 'Viber', value: contact.viber },
-        { id: 'polishPhone', label: 'Польський номер', value: contact.polishPhone }
-      ]
-    },
-    {
-      id: 'documents',
-      title: 'Документи',
-      icon: FileText,
-      emoji: '📄',
-      color: 'from-purple-400 to-violet-500',
-      fields: [
-        { id: 'passportSeries', label: 'Серія паспорта', value: contact.passportSeries },
-        { id: 'passportNumber', label: 'Номер паспорта', value: contact.passportNumber },
-        { id: 'passportValidFrom', label: 'Дійсний від', value: contact.passportValidFrom },
-        { id: 'passportValidTo', label: 'Дійсний до', value: contact.passportValidTo },
-        { id: 'birthPlace', label: 'Місто народження', value: contact.birthPlace },
-        { id: 'postalCode', label: 'Поштовий індекс', value: contact.postalCode },
-        { id: 'registration', label: 'Прописка', value: contact.registration },
-        { id: 'pesel', label: 'PESEL', value: contact.pesel }
-      ]
-    },
-    {
       id: 'work',
       title: 'Робота',
       icon: Briefcase,
@@ -126,28 +97,15 @@ export default function ContactViewSidebar({ isOpen, onClose, contact, onEdit, c
         { id: 'candidateCountry', label: 'Країна проживання', value: contact.candidateCountry },
         { id: 'vacancyCountry', label: 'Країна роботи', value: contact.vacancyCountry },
         { id: 'projectName', label: 'Назва проекту', value: contact.projectName },
-        { id: 'workExperience', label: 'Досвід роботи', value: contact.workExperience },
-        { id: 'languageSkills', label: 'Знання мов', value: contact.languageSkills },
-        { id: 'driverLicense', label: 'Водійські права', value: contact.driverLicense }
+        { id: 'candidateStatus', label: 'Статус', value: contact.candidateStatus }
       ]
     },
     {
-      id: 'personal',
-      title: 'Особиста інформація',
-      icon: User,
-      emoji: '👨‍👩‍👧‍👦',
-      color: 'from-pink-400 to-rose-500',
-      fields: [
-        { id: 'maritalStatus', label: 'Сімейний стан', value: contact.maritalStatus },
-        { id: 'children', label: 'Діти', value: contact.children }
-      ]
-    },
-    {
-      id: 'additional',
-      title: 'Додатково',
+      id: 'notes',
+      title: 'Примітки',
       icon: FileText,
       emoji: '📝',
-      color: 'from-slate-400 to-gray-500',
+      color: 'from-gray-400 to-slate-500',
       fields: [
         { id: 'notes', label: 'Примітки', value: contact.notes }
       ]

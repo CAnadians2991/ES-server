@@ -226,11 +226,11 @@ export default function CreateContactModal({ isOpen, onClose, onSave, currentMan
             <CardContent className="pt-0">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                  {currentManager.name?.charAt(0) || 'M'}
+                  {currentManager?.name?.charAt(0) || 'M'}
                 </div>
                 <div>
-                  <p className="font-medium text-blue-900">{currentManager.name || 'Менеджер'}</p>
-                  <p className="text-sm text-blue-700">{currentManager.branch || 'Філія'}</p>
+                  <p className="font-medium text-blue-900">{currentManager?.name || 'Менеджер'}</p>
+                  <p className="text-sm text-blue-700">{currentManager?.branch || 'Філія'}</p>
                 </div>
               </div>
             </CardContent>
@@ -287,7 +287,7 @@ export default function CreateContactModal({ isOpen, onClose, onSave, currentMan
                                 <SelectValue placeholder={`Оберіть ${field.label.toLowerCase()}`} />
                               </SelectTrigger>
                               <SelectContent>
-                                {field.options?.map((option) => (
+                                {'options' in field && field.options?.map((option: string) => (
                                   <SelectItem key={option} value={option}>
                                     {option}
                                   </SelectItem>
@@ -301,7 +301,7 @@ export default function CreateContactModal({ isOpen, onClose, onSave, currentMan
                               value={formData[field.id as keyof FormData] as string}
                               onChange={(e) => setFormData(prev => ({ ...prev, [field.id]: e.target.value }))}
                               placeholder={`Введіть ${field.label.toLowerCase()}`}
-                              required={field.required}
+                              required={'required' in field ? field.required : false}
                             />
                           )}
                         </div>
