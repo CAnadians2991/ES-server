@@ -218,10 +218,10 @@ export default function CRMLayout({ children }: LayoutProps) {
       {/* Основний контент */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Верхня панель */}
-        <header className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-200 px-4 py-2">
+        <header className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200 px-4 py-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <h2 className="text-lg font-semibold bg-gradient-to-r from-green-600 to-emerald-500 bg-clip-text text-transparent">
+              <h2 className="text-lg font-semibold bg-gradient-to-r from-blue-600 to-indigo-500 bg-clip-text text-transparent">
                 {pathname === '/clients' ? 'Клієнти' :
                  pathname === '/candidates' ? 'Кандидати' :
                  pathname === '/deals' ? 'Угоди' :
@@ -241,7 +241,7 @@ export default function CRMLayout({ children }: LayoutProps) {
                 <input
                   type="text"
                   placeholder="Пошук..."
-                  className="pl-7 pr-3 py-1.5 border border-green-200 rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent w-32"
+                  className="pl-7 pr-3 py-1.5 border border-blue-200 rounded-md text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-32"
                 />
               </div>
               
@@ -261,7 +261,7 @@ export default function CRMLayout({ children }: LayoutProps) {
         </header>
 
         {/* Контент */}
-        <main className="flex-1 overflow-auto bg-gradient-to-br from-green-50/30 to-emerald-50/30">
+        <main className="flex-1 overflow-auto bg-gradient-to-br from-blue-50/30 to-indigo-50/30">
           {children}
         </main>
       </div>

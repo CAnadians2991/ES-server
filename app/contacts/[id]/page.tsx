@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { ArrowLeft, Edit, Phone, Mail, User, Calendar, MapPin } from 'lucide-react'
-import EditContactModal from '@/components/contacts/edit-contact-modal'
+import EditContactSidebar from '@/components/contacts/edit-contact-sidebar'
 
 export default function ContactDetailPage() {
   const params = useParams()
@@ -216,13 +216,18 @@ export default function ContactDetailPage() {
           </div>
         </div>
 
-        {/* Edit Modal */}
+        {/* Edit Sidebar */}
         {editing && contact && (
-          <EditContactModal
+          <EditContactSidebar
             contact={contact}
             isOpen={editing}
             onClose={() => setEditing(false)}
             onSave={handleSave}
+            currentManager={{
+              id: user?.id || 0,
+              name: user?.fullName || user?.username || 'Менеджер',
+              branch: user?.branch || 'Філія'
+            }}
           />
         )}
       </div>
